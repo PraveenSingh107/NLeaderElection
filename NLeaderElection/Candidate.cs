@@ -11,18 +11,20 @@ namespace NLeaderElection
 {
     public class Candidate : Node, IDisposable
     {
-        public static string Id { get; private set; }
         private Timer electionTimeout;
-        public List<Follower> Followers { get; private set; }
-        public NodeDataState CurrentData { get; private set; }
+        public NodeDataState CurrentStateData { get;  set; }
         private Dictionary<string, long> positiveVotes;
+        private int totalResponseReceivedForCurrentTerm = 0;
 
-        public Candidate()
-            : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
+        public Candidate() : this(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
+        {}
+
+        public Candidate(string nodeId)
+            : base(nodeId)
         {
             electionTimeout = new Timer(200);
             electionTimeout.Elapsed += electionTimeout_Elapsed;
-            Followers = new List<Follower>();
+            electionTimeout.Start();
         }
 
         void electionTimeout_Elapsed(object sender, ElapsedEventArgs e)
@@ -33,13 +35,24 @@ namespace NLeaderElection
                 electionTimeout.Stop();
                 electionTimeout.Start();
                 SendRequestVotesToFollowers();
+                totalResponseReceivedForCurrentTerm = 0;
+            }
+            else
+            {
+                NodeRegistryCache.GetInstance().PromoteCandidateToLeader(this);
+                electionTimeout.Stop();
+                Dispose();
             }
         }
 
-        // TO DO
         private bool TryGettingConsensus()
         {
-            return true;
+            if (totalResponseReceivedForCurrentTerm != 0 && positiveVotes != null)
+            {
+                if ((positiveVotes.Count * 100) / totalResponseReceivedForCurrentTerm >= 50)
+                    return true;
+            }
+            return false;
         }
 
         public void SendRequestVotesToFollowers()
@@ -52,7 +65,7 @@ namespace NLeaderElection
                 {
                     if (!node.GetNodeId().Equals(this.nodeId))
                     {
-                        MessageBroker.GetInstance().CandidateSendRequestVoteAsync(node, CurrentData.Term);
+                        MessageBroker.GetInstance().CandidateSendRequestVoteAsync(node, CurrentStateData.Term);
                     }
                 }
                 RestartElectionTimeout();
@@ -104,10 +117,16 @@ namespace NLeaderElection
         {
             if (positiveVotes != null)
             {
-                if (!positiveVotes.ContainsKey(response.FollowerId))
+                if (!positiveVotes.ContainsKey(response.FollowerId) && this.term == response.Term)
+                {
                     positiveVotes.Add(response.FollowerId, response.Term);
-                else
+                    totalResponseReceivedForCurrentTerm++;
+                }
+                else if (this.term == response.Term)
+                {
                     positiveVotes[response.FollowerId] = response.Term;
+                    totalResponseReceivedForCurrentTerm++;
+                }
             }
         }
 

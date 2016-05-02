@@ -46,5 +46,24 @@ namespace NLeaderElection
             }
             throw new Exception("Node not registered.");
         }
+    
+        public void PromoteFollowerToCandidate(Follower follower)
+        {
+            Candidate candidate = new Candidate(follower.GetNodeId());
+            candidate.CurrentStateData = follower.CurrentStateData;
+            candidate.IP =  follower.IP;
+            candidate.UpdateTerm(follower.GetTerm());
+            this.CurrentNode = candidate;
+        }
+
+        internal void PromoteCandidateToLeader(Candidate candidate)
+        {
+            
+            Leader leader = new Leader(candidate.GetNodeId());
+            leader.CurrentStateData = candidate.CurrentStateData;
+            candidate.IP = candidate.IP;
+            candidate.UpdateTerm(candidate.GetTerm());
+            this.CurrentNode = leader;
+        }
     }
 }

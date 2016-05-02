@@ -13,9 +13,12 @@ namespace NLeaderElection
         public List<Follower> Followers { get; private set; }
         private Timer heartBeatTimeout;
 
-        public Leader() : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
+        public Leader() : this(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
+        {}
+
+        public Leader(string nodeId)
+            : base(nodeId)
         {
-            
             Followers = new List<Follower>();
             heartBeatTimeout = new Timer(150);
             heartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
