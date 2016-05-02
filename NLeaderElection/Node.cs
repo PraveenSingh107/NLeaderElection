@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLeaderElection.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -17,22 +18,31 @@ namespace NLeaderElection
         public Node(string nodeId)
         {
             this.nodeId = nodeId;
-            IP = null;
-            //IP = //Dns.GetHostEntry(Dns.GetHostName()).AddressList[0];
+            
             IPAddress[] IPs = Array.FindAll(
                 Dns.GetHostEntry(string.Empty).AddressList,
                 a => a.AddressFamily == AddressFamily.InterNetwork);
-            foreach (var ip in IPs)
-            {
-                if (ip.ToString().StartsWith("192"))
-                {
-                    IP = ip;
-                }
-            }
-            if (IP == null)
-            {
-                IP = IPs[0]; 
-            }
+            
+            if (IPs.Count() > 1)
+                throw new MoreThanOneIPAddressConfigured("Critical :: More than one IP addresses are registered. Please bind single IP.");
+           
+            IP = IPs[0];
+            term = 1;
+        }
+
+        public Node(string nodeId, string IPAddress)
+        {
+            this.nodeId = nodeId;
+            IP = null;
+
+            IPAddress[] IPs = Array.FindAll(
+                Dns.GetHostEntry(IPAddress).AddressList,
+                a => a.AddressFamily == AddressFamily.InterNetwork);
+
+            if (IPs.Count() > 1)
+                throw new MoreThanOneIPAddressConfigured("Please bind single IP.");
+
+            IP = IPs[0];
             term = 1;
         }
 
