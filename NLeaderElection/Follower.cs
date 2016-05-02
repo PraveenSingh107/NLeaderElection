@@ -14,14 +14,27 @@ namespace NLeaderElection
     {
         private static Timer ElectionTimeout;
         private static Timer HeartBeatTimeout;
-        public static NodeDataState CurrentState { get; set; }
+        public NodeDataState CurrentStateData { get; set; }
         
         public Follower() : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
+        {
+            SetupTimeouts();
+        }
+
+        public Follower(IPAddress address)
+            : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"),address)
+        {
+            SetupTimeouts();
+        }
+
+        private void SetupTimeouts()
         {
             ElectionTimeout = new Timer(200);
             HeartBeatTimeout = new Timer(200);
             ElectionTimeout.Elapsed += ElectionTimeout_Elapsed;
             HeartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
+            ElectionTimeout.Start();
+            HeartBeatTimeout.Start();
         }
 
         public void StartTimouts()
@@ -30,20 +43,12 @@ namespace NLeaderElection
             HeartBeatTimeout.Start();
         }
 
-        public Follower(IPAddress address)
-            : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"),address)
-        {
-            ElectionTimeout = new Timer(200);
-            HeartBeatTimeout = new Timer(200);
-            ElectionTimeout.Elapsed += ElectionTimeout_Elapsed;
-            HeartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
-            ElectionTimeout.Start();
-            HeartBeatTimeout.Start();
-        }
-
         private void HeartBeatTimeout_Elapsed(object sender, ElapsedEventArgs e)
         {
-         
+            NodeRegistryCache.GetInstance().PromoteFollowerToCandidate(this);
+            HeartBeatTimeout.Stop();
+            ElectionTimeout.Stop();
+            Dispose();
         }
 
         private void ElectionTimeout_Elapsed(object sender, ElapsedEventArgs e)
@@ -74,15 +79,19 @@ namespace NLeaderElection
         /// <returns></returns>
         public RequestVoteRPCResponse RespondToRequestVoteFromCandidate(RequestVoteRPCMessage requestVote)
         {
-            RequestVoteRPCResponse response;
+            //Restart heartbeat as there is already a candidate. Might sujbect to check the term to verify
+            //that this message is not from old candidate
+            HeartBeatTimeout_Reset();
 
+            RequestVoteRPCResponse response;
+            
             if (HasAleadyVoted())
             {
                 response = new RequestVoteRPCResponse(nodeId, RequestVoteResponseType.AlreadyVotedForCurrentTerm);
             }
             else
             {
-                if (requestVote.HasMoreRecentTerm(CurrentState.Term))
+                if (requestVote.HasMoreRecentTerm(CurrentStateData.Term))
                 {
                     response = new RequestVoteRPCResponse(nodeId, RequestVoteResponseType.StaleRequestVoteMessage);
                 }
@@ -96,12 +105,7 @@ namespace NLeaderElection
 
         private bool HasAleadyVoted()
         {
-            return CurrentState.Voted;
-        }
-
-        public Candidate BecomeACandidate()
-        {
-            return new Candidate();
+            return CurrentStateData.Voted;
         }
 
         // TO DO
@@ -140,12 +144,12 @@ namespace NLeaderElection
 
         private bool IsServingCurrentTerm(long term)
         {
-            return term.Equals(CurrentState.Term);
+            return term.Equals(CurrentStateData.Term);
         }
 
         private bool IsWorkingOnStaleTerm(long term)
         {
-            if (CurrentState.Term < term)
+            if (CurrentStateData.Term < term)
                 return true;
             return false;
         }

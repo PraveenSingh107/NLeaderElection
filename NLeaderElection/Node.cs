@@ -12,7 +12,7 @@ namespace NLeaderElection
     public abstract class Node
     {
         protected string nodeId;
-        public IPAddress IP { get;private set;}
+        public IPAddress IP { get;set;}
         protected long term;
 
         public Node(string nodeId)
