@@ -89,7 +89,7 @@ namespace NLeaderElection.Messaging
 
                 // Complete sending the data to the remote device.
                 int bytesSent = client.EndSend(ar);
-                Console.WriteLine("Sent {0} bytes to server.", bytesSent);
+                Console.WriteLine("Sent request vote RPC.", bytesSent);
 
                 // Signal that all bytes have been sent.
                 candidateSendDone.Set();
@@ -211,7 +211,7 @@ namespace NLeaderElection.Messaging
 
                 // Complete sending the data to the remote device.
                 int bytesSent = handler.EndSend(ar);
-                Console.WriteLine("Sent {0} bytes to client.", bytesSent);
+                Console.WriteLine("Sent Rquest vote RPC response bytes to client.", bytesSent);
 
                 handler.Shutdown(SocketShutdown.Both);
                 handler.Close();
@@ -349,7 +349,7 @@ namespace NLeaderElection.Messaging
 
                 // Complete sending the data to the remote device.
                 int bytesSent = client.EndSend(ar);
-                Console.WriteLine("Sent {0} bytes to server.", bytesSent);
+                Console.WriteLine("Sent new node notification to other nodes.", bytesSent);
 
                 // Signal that all bytes have been sent.
                 candidateSendDone.Set();

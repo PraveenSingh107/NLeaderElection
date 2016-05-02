@@ -283,7 +283,7 @@ namespace NLeaderElection.Messaging
 
                 // Complete sending the data to the remote device.
                 int bytesSent = handler.EndSend(ar);
-                Logger.Log(string.Format("Sent {0} bytes to client.", bytesSent));
+                Logger.Log(string.Format("Sent new node found notification's response to source node.", bytesSent));
 
                 handler.Shutdown(SocketShutdown.Both);
                 handler.Close();
