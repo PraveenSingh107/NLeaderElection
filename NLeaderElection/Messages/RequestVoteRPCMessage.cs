@@ -15,6 +15,11 @@ namespace NLeaderElection.Messages
             this.term = currentTerm;
         }
 
+        public long GetTerm()
+        {
+            return term;
+        }
+
         public bool HasMoreRecentTerm(long followerTerm)
         {
             if (this.term >= followerTerm)

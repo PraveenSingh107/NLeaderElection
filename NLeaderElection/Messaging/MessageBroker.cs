@@ -41,6 +41,7 @@ namespace NLeaderElection.Messaging
             // open a tcp connection to the node's socket.
             try
             {
+                Logger.Log(string.Format("Sending Request Vote RPC to {0} .", node.ToString()));
                 IPAddress ipAddress = node.IP;
                 IPEndPoint remoteEP = new IPEndPoint(ipAddress, CANDIDATE_PORT_NUMBER);
 
@@ -56,7 +57,7 @@ namespace NLeaderElection.Messaging
                 candidateSendDone.WaitOne();
 
                 // Write the response to the console.
-                Logger.Log(string.Format("Response received : {0}", response));
+                Logger.Log(string.Format("Sent Request Vote RPC to {0} .", node.ToString()));
 
                 // Release the socket.
                 candidate.Shutdown(SocketShutdown.Both);
