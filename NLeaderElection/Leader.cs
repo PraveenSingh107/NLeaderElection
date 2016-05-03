@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLeaderElection.Messaging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -21,7 +22,7 @@ namespace NLeaderElection
             : base(nodeId)
         {
             Followers = new List<Follower>();
-            heartBeatTimeout = new Timer(10);
+            heartBeatTimeout = new Timer(1000);
             heartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
             heartBeatTimeout.Start();
 
@@ -33,7 +34,7 @@ namespace NLeaderElection
             : base(nodeId, ip, term)
         {
             Followers = new List<Follower>();
-            heartBeatTimeout = new Timer(10);
+            heartBeatTimeout = new Timer(1000);
             heartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
             heartBeatTimeout.Start();
             CurrentStateData = new NodeDataState(term);
@@ -60,8 +61,7 @@ namespace NLeaderElection
             {
                 try
                 {
-                    //Messaging.MessageBroker.GetInstance().
-                    //follower.HeartBeatSignalFromLeader(CurrentStateData.Term);
+                    MessageBroker.GetInstance().LeaderSendHeartbeatAsync(follower,this.GetTerm());
                 }
                 catch (Exception exp)
                 {
@@ -72,7 +72,7 @@ namespace NLeaderElection
                 Logger.Log("INFO :: No followers registered to the cluster Or Leader is not aware of any follower.");
         }
 
-         public void Dispose()
+        public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
@@ -89,6 +89,17 @@ namespace NLeaderElection
         ~Leader()
         {
             Dispose(false);
+        }
+
+        
+        internal IPAddress GetIP()
+        {
+            return IP;
+        }
+
+        internal void HeartBeatSignalReceivedFromLeader(long p)
+        {
+            throw new NotImplementedException();
         }
     }
 }

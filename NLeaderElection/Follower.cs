@@ -27,6 +27,12 @@ namespace NLeaderElection
             SetupTimeouts();
         }
 
+        public Follower(string nodeId,IPAddress address,long term)
+            : base(nodeId, address,term)
+        {
+            SetupTimeouts();
+        }
+
         private void SetupTimeouts()
         {
             NetworkDiscoveryTimeout = new Timer(8000);
@@ -118,7 +124,7 @@ namespace NLeaderElection
 
         }
 
-        public virtual void HeartBeatSignalFromLeader(long term)
+        public virtual void HeartBeatSignalReceivedFromLeader(long term)
         {
             if (IsServingCurrentTerm(term))
             {

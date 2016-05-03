@@ -20,9 +20,12 @@ namespace NLeaderElection.Messaging
         
         private readonly static Int32 CANDIDATE_PORT_NUMBER = 11001;
         private readonly static Int32 STARTUP_PORT_NUMBER = 11002;
+        private readonly static Int32 HEARTBEAT_PORT_NUMBER = 11004;
         private string response = string.Empty;
         private ManualResetEvent candidateConnectDone = new ManualResetEvent(false);
         private ManualResetEvent candidateSendDone = new ManualResetEvent(false);
+        private ManualResetEvent leaderConnectDone = new ManualResetEvent(false);
+        private ManualResetEvent leaderSendDone = new ManualResetEvent(false);
         private ManualResetEvent startupRequestResponseReceiveDone = new ManualResetEvent(false);
         
         #endregion Properties
@@ -33,6 +36,93 @@ namespace NLeaderElection.Messaging
         {
             return new MessageBroker();
         }
+
+        #region Leader Send Methods
+
+        internal void LeaderSendHeartbeatAsync(Node node, long term)
+        {
+            // open a tcp connection to the node's socket.
+            try
+            {
+                Logger.Log(string.Format("INFO :: Sending heartbeat signal to {0} .", node.ToString()));
+                IPAddress ipAddress = node.IP;
+                IPEndPoint remoteEP = new IPEndPoint(ipAddress, HEARTBEAT_PORT_NUMBER);
+
+                // Create a TCP/IP socket.
+                Socket senderSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+                // Connect to the remote endpoint.
+                senderSocket.BeginConnect(remoteEP, new AsyncCallback(HeartbeatConnectCallback), senderSocket);
+                leaderConnectDone.WaitOne();
+
+                // Send test data to the remote device.
+                SendHeartbeatSignal(senderSocket, term + "##<EOF>");
+                leaderSendDone.WaitOne();
+
+                // Write the response to the console.
+                Logger.Log(string.Format("INFO :: Sent heartbeat signal to {0} .", node.ToString()));
+
+                // Release the socket.
+                senderSocket.Shutdown(SocketShutdown.Both);
+                senderSocket.Close();
+
+            }
+            catch (Exception e)
+            {
+                Logger.Log(e.ToString());
+            }
+        }
+
+        private void SendHeartbeatSignal(Socket client, String data)
+        {
+            // Convert the string data to byte data using ASCII encoding.
+            byte[] byteData = Encoding.ASCII.GetBytes(data);
+
+            // Begin sending the data to the remote device.
+            client.BeginSend(byteData, 0, byteData.Length, 0,
+                new AsyncCallback(HeartbeatSendCallback), client);
+        }
+
+        private void HeartbeatSendCallback(IAsyncResult ar)
+        {
+            try
+            {
+                // Retrieve the socket from the state object.
+                Socket client = (Socket)ar.AsyncState;
+
+                // Complete sending the data to the remote device.
+                int bytesSent = client.EndSend(ar);
+                
+                // Signal that all bytes have been sent.
+                leaderSendDone.Set();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }
+
+        private void HeartbeatConnectCallback(IAsyncResult ar)
+        {
+            try
+            {
+                // Retrieve the socket from the state object.
+                Socket client = (Socket)ar.AsyncState;
+
+                // Complete the connection.
+                client.EndConnect(ar);
+
+                // Signal that the connection has been made.
+                leaderConnectDone.Set();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }
+
+
+        #endregion Leader Send Methods
 
         # region Candidate Send Methods
 

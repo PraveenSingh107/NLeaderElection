@@ -14,19 +14,92 @@ namespace NLeaderElection.Messaging
         private readonly static Int32 FOLLOWER_PORT_NUMBER = 11000;
         private readonly static Int32 CANDIDATE_PORT_NUMBER = 11001;
         private readonly static Int32 STARTUP_PORT_NUMBER = 11002;
+        private readonly static Int32 HEARTBEAT_PORT_NUMBER = 11002;
         public static ManualResetEvent followerAsyncHandler = new ManualResetEvent(false);
         public static ManualResetEvent candidateAsyncHandler = new ManualResetEvent(false);
         public static ManualResetEvent startupAsyncHandler = new ManualResetEvent(false);
         public static ManualResetEvent candidatePortListener = new ManualResetEvent(false);
         public static ManualResetEvent followerPortListener = new ManualResetEvent(false);
+        public static ManualResetEvent heartBeatPortListener = new ManualResetEvent(false);
 
         public static void StartListeningOnPorts()
         {
 
             Task.Run(() => { WaitForRequestVotesFromCandidateAsync(); });
             Task.Run(() => { WaitForStartupMessageFromFollowerAsync(); });
+            Task.Run(() => { WaitForHeartbeatMessageFromLeaderAsync(); });
             candidatePortListener.WaitOne();
             followerPortListener.WaitOne();
+            heartBeatPortListener.WaitOne();
+        }
+
+        private static void WaitForHeartbeatMessageFromLeaderAsync()
+        {
+            byte[] incomingData = new byte[1024];
+            byte[] outGoingData = new byte[1024];
+
+            IPEndPoint endPoint = new IPEndPoint(NodeRegistryCache.GetInstance().IP, HEARTBEAT_PORT_NUMBER);
+
+            Socket socketListener = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            
+            try
+            {
+                socketListener.Bind(endPoint);
+                Logger.Log("INFO :: Node started Listening on port " + FOLLOWER_PORT_NUMBER + " .");
+                Logger.Log("Candidate started Listening on port " + CANDIDATE_PORT_NUMBER + " .");
+                socketListener.Listen(1000);
+                
+                while (true)
+                {
+                    heartBeatPortListener.Reset();
+                    socketListener.BeginAccept(HeartbeatAcceptCallback, socketListener);
+                    heartBeatPortListener.WaitOne();
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        private static void HeartbeatAcceptCallback(IAsyncResult ar)
+        {
+            heartBeatPortListener.Set();
+
+            Socket listener = (Socket)ar.AsyncState;
+            Socket handler = listener.EndAccept(ar);
+
+            // Create the state object.
+            StateObject state = new StateObject();
+            state.workSocket = handler;
+            handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                new AsyncCallback(HeartbeatReadCallback), state);
+        }
+
+        private static void HeartbeatReadCallback(IAsyncResult ar)
+        {
+            String content = String.Empty;
+            StateObject state = (StateObject)ar.AsyncState;
+            Socket handler = state.workSocket;
+
+            // Read data from the client socket. 
+            int bytesRead = handler.EndReceive(ar);
+
+            if (bytesRead > 0)
+            {
+                state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+                content = state.sb.ToString();
+                if (content.IndexOf("<EOF>") > -1)
+                {
+                    NodeRegistryCache.GetInstance().NofifyHeartbeatReceived(content);
+                }
+                else
+                {
+                    // Not all data received. Get more.
+                    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                    new AsyncCallback(FollowerReadCallback), state);
+                }
+            }
         }
 
         public static void StopListeningOnPorts()

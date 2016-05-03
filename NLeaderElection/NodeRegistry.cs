@@ -64,7 +64,43 @@ namespace NLeaderElection
             candidate.UpdateTerm(candidate.GetTerm());
             this.CurrentNode = leader;
             Logger.Log(string.Format("{0} promoted to Leader {1} .", candidate, leader));
-            leader.SendHeartBeatMessage();
+        }
+
+        internal void NofifyHeartbeatReceived(string content)
+        {
+            var receivedMsg = content.Split(new String[] { "##" }, StringSplitOptions.RemoveEmptyEntries);
+            if (CurrentNode is Follower)
+            {
+                (CurrentNode as Follower).HeartBeatSignalReceivedFromLeader(Convert.ToInt64(receivedMsg[0]));
+            }
+            else if (CurrentNode is Candidate)
+            {
+                (CurrentNode as Candidate).HeartBeatSignalReceivedFromLeader(Convert.ToInt64(receivedMsg[0]));
+            }
+            else
+            {
+                (CurrentNode as Leader).HeartBeatSignalReceivedFromLeader(Convert.ToInt64(receivedMsg[0]));
+            }
+        }
+
+        internal void DemoteCandidateToFollower()
+        {
+            Candidate candidate = (CurrentNode as Candidate);
+            Follower follower = new Follower(candidate.GetNodeId(), candidate.GetIP(), candidate.GetTerm());
+            follower.UpdateTerm(candidate.GetTerm());
+            this.CurrentNode = follower;
+            candidate.Dispose();
+            Logger.Log(string.Format("{0} demoted to Follower {1} .", candidate, follower));
+        }
+
+        internal void DemoteLeaderToFollower()
+        {
+            Leader leader = (CurrentNode as Leader);
+            Follower follower = new Follower(leader.GetNodeId(), leader.GetIP(), leader.GetTerm());
+            follower.UpdateTerm(leader.GetTerm());
+            this.CurrentNode = follower;
+            leader.Dispose();
+            Logger.Log(string.Format("{0} demoted to Follower {1} .", leader, follower));
         }
     }
 }

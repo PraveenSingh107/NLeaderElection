@@ -175,5 +175,41 @@ namespace NLeaderElection
         {
             return IP;
         }
+
+        internal int HeartBeatSignalReceivedFromLeader(long p)
+        {
+            if (IsServingCurrentTerm(term))
+            {
+                NodeRegistryCache.GetInstance().DemoteCandidateToFollower();
+                return 0;
+            }
+            else if (IsWorkingOnStaleTerm(term))
+            {
+                UpdateNodeLogEntries();
+                return 0;
+            }
+            else
+            {
+                return -1;
+               // RequestLeaderToStepDown();
+            }
+        }
+
+        private void UpdateNodeLogEntries()
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool IsServingCurrentTerm(long term)
+        {
+            return term.Equals(CurrentStateData.Term);
+        }
+
+        private bool IsWorkingOnStaleTerm(long term)
+        {
+            if (CurrentStateData.Term < term)
+                return true;
+            return false;
+        }
     }
 }
