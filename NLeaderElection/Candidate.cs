@@ -28,10 +28,10 @@ namespace NLeaderElection
 
         private void Setup()
         {
+            CurrentStateData = new NodeDataState(1);
             electionTimeout = new Timer(200);
             electionTimeout.Elapsed += electionTimeout_Elapsed;
             electionTimeout.Start();
-            CurrentStateData = new NodeDataState(1);
         }
 
         public Candidate(string nodeId,IPAddress ipAddress,long termPassed)
@@ -43,6 +43,7 @@ namespace NLeaderElection
         void electionTimeout_Elapsed(object sender, ElapsedEventArgs e)
         {
             // Election timed out without reaching at consensus. Trying re election
+            Console.WriteLine("Election timed out without reaching at consensus. Trying re election");
             if (!TryGettingConsensus())
             {
                 electionTimeout.Stop();

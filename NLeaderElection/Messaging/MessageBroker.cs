@@ -18,7 +18,6 @@ namespace NLeaderElection.Messaging
         
         #region Properties
         
-        private readonly static Int32 FOLLOWER_PORT_NUMBER = 11000;
         private readonly static Int32 CANDIDATE_PORT_NUMBER = 11001;
         private readonly static Int32 STARTUP_PORT_NUMBER = 11002;
         private string response = string.Empty;
