@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
@@ -27,6 +28,17 @@ namespace NLeaderElection
             // not sure
             CurrentStateData = new NodeDataState(1);
         }
+
+        public Leader(string nodeId, IPAddress ip, long term)
+            : base(nodeId, ip, term)
+        {
+            Followers = new List<Follower>();
+            heartBeatTimeout = new Timer(150);
+            heartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
+            heartBeatTimeout.Start();
+            CurrentStateData = new NodeDataState(term);
+        }
+        
 
         private void HeartBeatTimeout_Elapsed(object sender, ElapsedEventArgs e)
         {

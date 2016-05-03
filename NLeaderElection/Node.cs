@@ -46,6 +46,13 @@ namespace NLeaderElection
             term = 1;
         }
 
+        public Node(string nodeId, IPAddress IPAddress, long termPassed)
+        {
+            this.nodeId = nodeId;
+            IP = IPAddress;
+            term = termPassed;
+        }
+
         public long GetTerm()
         {
             return this.term;
