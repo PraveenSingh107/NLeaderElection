@@ -16,7 +16,7 @@ namespace NLeaderElection.Client
         {
             try
             {
-                string nodes = "-Bind '192.168.56.102' -Nodes '192.168.56.101,192.168.56.103'";
+                string nodes = "-Bind '192.168.56.102' -Nodes '192.168.56.101'";
                 args = new String[] { nodes };
                 Logger.Log(string.Format("INFO :: User Command : {0}.", nodes));
                 Setup(args);

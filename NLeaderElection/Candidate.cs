@@ -23,17 +23,21 @@ namespace NLeaderElection
         public Candidate(string nodeId)
             : base(nodeId)
         {
+            Setup();
+        }
+
+        private void Setup()
+        {
             electionTimeout = new Timer(200);
             electionTimeout.Elapsed += electionTimeout_Elapsed;
             electionTimeout.Start();
+            CurrentStateData = new NodeDataState(1);
         }
 
         public Candidate(string nodeId,IPAddress ipAddress,long termPassed)
             : base(nodeId,ipAddress,termPassed)
         {
-            electionTimeout = new Timer(200);
-            electionTimeout.Elapsed += electionTimeout_Elapsed;
-            electionTimeout.Start();
+            Setup();
         }
 
         void electionTimeout_Elapsed(object sender, ElapsedEventArgs e)
