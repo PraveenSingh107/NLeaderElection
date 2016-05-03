@@ -39,7 +39,7 @@ namespace NLeaderElection
 
         public void StartTimouts()
         {
-            HeartBeatTimeout.Start();
+            
         }
 
         private void HeartBeatTimeout_Elapsed(object sender, ElapsedEventArgs e)
@@ -52,7 +52,9 @@ namespace NLeaderElection
 
         private void ElectionTimeout_Elapsed(object sender, ElapsedEventArgs e)
         {
-            NodeRegistryCache.GetInstance().PromoteFollowerToCandidate(this);
+            Logger.Log(string.Format("Network bootstrap timed out."));
+            HeartBeatTimeout.Start();
+            Logger.Log(string.Format("Heartbeat timeout started."))
         }
 
         private void HeartBeatTimeout_Reset()
