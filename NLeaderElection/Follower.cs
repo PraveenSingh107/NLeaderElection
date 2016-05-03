@@ -12,7 +12,7 @@ namespace NLeaderElection
 {
     public class Follower : Node , IDisposable
     {
-        private static Timer ElectionTimeout;
+        private static Timer NetworkDiscoveryTimeout;
         private static Timer HeartBeatTimeout;
         public NodeDataState CurrentStateData { get; set; }
         
@@ -29,17 +29,16 @@ namespace NLeaderElection
 
         private void SetupTimeouts()
         {
-            ElectionTimeout = new Timer(200);
-            HeartBeatTimeout = new Timer(200);
-            ElectionTimeout.Elapsed += ElectionTimeout_Elapsed;
+            NetworkDiscoveryTimeout = new Timer(8000);
+            HeartBeatTimeout = new Timer(500);
+            NetworkDiscoveryTimeout.Elapsed += ElectionTimeout_Elapsed;
             HeartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
-            ElectionTimeout.Start();
-            HeartBeatTimeout.Start();
+            NetworkDiscoveryTimeout.Start();
+            //HeartBeatTimeout.Start();
         }
 
         public void StartTimouts()
         {
-            ElectionTimeout.Start();
             HeartBeatTimeout.Start();
         }
 
@@ -47,13 +46,13 @@ namespace NLeaderElection
         {
             NodeRegistryCache.GetInstance().PromoteFollowerToCandidate(this);
             HeartBeatTimeout.Stop();
-            ElectionTimeout.Stop();
+            NetworkDiscoveryTimeout.Stop();
             Dispose();
         }
 
         private void ElectionTimeout_Elapsed(object sender, ElapsedEventArgs e)
         {
-        //        throw new NotImplementedException();
+            NodeRegistryCache.GetInstance().PromoteFollowerToCandidate(this);
         }
 
         private void HeartBeatTimeout_Reset()
@@ -64,8 +63,8 @@ namespace NLeaderElection
 
         private void ElectionTimeout_Reset()
         {
-            ElectionTimeout.Stop();
-            ElectionTimeout.Start();
+            NetworkDiscoveryTimeout.Stop();
+            NetworkDiscoveryTimeout.Start();
         }
 
         /// <summary>
@@ -166,7 +165,7 @@ namespace NLeaderElection
         {
             if (disposing)
             {
-                if (ElectionTimeout != null) ElectionTimeout.Dispose();
+                if (NetworkDiscoveryTimeout != null) NetworkDiscoveryTimeout.Dispose();
                 if (HeartBeatTimeout != null) HeartBeatTimeout.Dispose();
             }
         }

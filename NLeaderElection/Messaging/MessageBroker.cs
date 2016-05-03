@@ -250,6 +250,8 @@ namespace NLeaderElection.Messaging
                 ReceiveStartupResposeAsync(candidate);
                 startupRequestResponseReceiveDone.WaitOne();
                 // Write the response to the console.
+                // After letting the cluster know that a new node has been added. We can start the heartbeat timeout on the follower node.
+                StartFollowersHeartBeatTimeout();
                 Logger.Log(string.Format("Response received : {0}", response));
 
                 // Release the socket.
@@ -260,6 +262,15 @@ namespace NLeaderElection.Messaging
             catch (Exception e)
             {
                 Logger.Log(e.ToString());
+            }
+        }
+
+        private void StartFollowersHeartBeatTimeout()
+        {
+            var follower = NodeRegistryCache.GetInstance().CurrentNode as Follower;
+            if (follower != null)
+            {
+                follower.StartTimouts();
             }
         }
 
