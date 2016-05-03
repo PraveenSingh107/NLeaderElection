@@ -59,12 +59,14 @@ namespace NLeaderElection
         {
             HeartBeatTimeout.Stop();
             HeartBeatTimeout.Start();
+            Logger.Log(string.Format("{0}'s heartbeat timed out.",this.ToString()));
         }
 
         private void ElectionTimeout_Reset()
         {
             NetworkDiscoveryTimeout.Stop();
             NetworkDiscoveryTimeout.Start();
+            Logger.Log(string.Format("{0}'s bootstrap timed out.", this.ToString()));
         }
 
         /// <summary>
@@ -81,7 +83,7 @@ namespace NLeaderElection
             //Restart heartbeat as there is already a candidate. Might sujbect to check the term to verify
             //that this message is not from old candidate
             HeartBeatTimeout_Reset();
-
+            Logger.Log(string.Format("INFO :: Received Request RPC from candidate for term {0} .",requestVote.GetTerm()));
             RequestVoteRPCResponse response;
             
             if (HasAleadyVoted())
@@ -99,6 +101,7 @@ namespace NLeaderElection
                     response = new RequestVoteRPCResponse(nodeId, RequestVoteResponseType.PositiveVote);
                 }
             }
+            Logger.Log(string.Format("INFO :: Sending response to Request RPC from candidate for term {0} .",requestVote.GetTerm()));
             return response;
         }
 
