@@ -54,7 +54,7 @@ namespace NLeaderElection
         {
             Logger.Log(string.Format("Network bootstrap timed out."));
             HeartBeatTimeout.Start();
-            Logger.Log(string.Format("Heartbeat timeout started."))
+            Logger.Log(string.Format("Heartbeat timeout started."));
         }
 
         private void HeartBeatTimeout_Reset()
