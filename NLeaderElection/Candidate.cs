@@ -28,10 +28,10 @@ namespace NLeaderElection
 
         private void Setup()
         {
+            CurrentStateData = new NodeDataState(1);
             electionTimeout = new Timer(200);
             electionTimeout.Elapsed += electionTimeout_Elapsed;
             electionTimeout.Start();
-            CurrentStateData = new NodeDataState(1);
         }
 
         public Candidate(string nodeId,IPAddress ipAddress,long termPassed)
