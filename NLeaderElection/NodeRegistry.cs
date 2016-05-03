@@ -49,7 +49,7 @@ namespace NLeaderElection
     
         public void PromoteFollowerToCandidate(Follower follower)
         {
-            Candidate candidate = new Candidate(follower.GetNodeId());
+            Candidate candidate = new Candidate(follower.GetNodeId(),follower.GetIP(),follower.GetTerm());
             candidate.CurrentStateData = follower.CurrentStateData;
             candidate.IP =  follower.IP;
             candidate.UpdateTerm(follower.GetTerm());
@@ -59,7 +59,7 @@ namespace NLeaderElection
         internal void PromoteCandidateToLeader(Candidate candidate)
         {
             
-            Leader leader = new Leader(candidate.GetNodeId());
+            Leader leader = new Leader(candidate.GetNodeId(),candidate.GetIP(),candidate.GetTerm());
             leader.CurrentStateData = candidate.CurrentStateData;
             candidate.IP = candidate.IP;
             candidate.UpdateTerm(candidate.GetTerm());

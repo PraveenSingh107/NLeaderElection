@@ -192,5 +192,10 @@ namespace NLeaderElection
         {
             return "Follower :: IP : " + this.IP.ToString() + ", ID : " + this.nodeId.ToString();
         }
+
+        internal IPAddress GetIP()
+        {
+            return IP;
+        }
     }
 }

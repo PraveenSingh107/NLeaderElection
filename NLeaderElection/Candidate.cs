@@ -3,6 +3,7 @@ using NLeaderElection.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
@@ -21,6 +22,14 @@ namespace NLeaderElection
 
         public Candidate(string nodeId)
             : base(nodeId)
+        {
+            electionTimeout = new Timer(200);
+            electionTimeout.Elapsed += electionTimeout_Elapsed;
+            electionTimeout.Start();
+        }
+
+        public Candidate(string nodeId,IPAddress ipAddress,long termPassed)
+            : base(nodeId,ipAddress,termPassed)
         {
             electionTimeout = new Timer(200);
             electionTimeout.Elapsed += electionTimeout_Elapsed;
@@ -154,6 +163,11 @@ namespace NLeaderElection
                 return RequestVoteResponseType.AlreadyVotedForCurrentTerm;
             else
                 return RequestVoteResponseType.StaleRequestVoteMessage;
+        }
+
+        internal IPAddress GetIP()
+        {
+            return IP;
         }
     }
 }
