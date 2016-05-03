@@ -29,7 +29,7 @@ namespace NLeaderElection
         private void Setup()
         {
             CurrentStateData = new NodeDataState(1);
-            electionTimeout = new Timer(200);
+            electionTimeout = new Timer(4000);
             electionTimeout.Elapsed += electionTimeout_Elapsed;
             electionTimeout.Start();
         }
@@ -42,14 +42,12 @@ namespace NLeaderElection
 
         void electionTimeout_Elapsed(object sender, ElapsedEventArgs e)
         {
-            // Election timed out without reaching at consensus. Trying re election
-            Console.WriteLine("Election timed out without reaching at consensus. Trying re election");
             if (!TryGettingConsensus())
             {
-                electionTimeout.Stop();
-                electionTimeout.Start();
+                RestartElectionTimeout();
+                // Election timed out without reaching at consensus. Trying re election
+                Console.WriteLine("Election timed out without reaching at consensus. Trying re election");
                 SendRequestVotesToFollowers();
-                totalResponseReceivedForCurrentTerm = 0;
             }
             else
             {
@@ -73,7 +71,9 @@ namespace NLeaderElection
         {
             try
             {
+                totalResponseReceivedForCurrentTerm++;
                 positiveVotes = new Dictionary<String, long>();
+                positiveVotes.Add(this.GetNodeId(), this.GetTerm());
                 var nodeRegistry = NodeRegistryCache.GetInstance();
                 foreach (Node node in nodeRegistry.Get())
                 {
@@ -82,7 +82,6 @@ namespace NLeaderElection
                         MessageBroker.GetInstance().CandidateSendRequestVoteAsync(node, CurrentStateData.Term);
                     }
                 }
-                RestartElectionTimeout();
             }
             catch (Exception)
             {
@@ -96,6 +95,8 @@ namespace NLeaderElection
             {
                 electionTimeout.Stop();
                 electionTimeout.Start();
+                totalResponseReceivedForCurrentTerm = 0;
+                positiveVotes = new Dictionary<string, long>();
             }
         }
 

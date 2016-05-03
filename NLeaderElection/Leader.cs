@@ -21,7 +21,7 @@ namespace NLeaderElection
             : base(nodeId)
         {
             Followers = new List<Follower>();
-            heartBeatTimeout = new Timer(150);
+            heartBeatTimeout = new Timer(10);
             heartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
             heartBeatTimeout.Start();
 
@@ -33,7 +33,7 @@ namespace NLeaderElection
             : base(nodeId, ip, term)
         {
             Followers = new List<Follower>();
-            heartBeatTimeout = new Timer(150);
+            heartBeatTimeout = new Timer(10);
             heartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
             heartBeatTimeout.Start();
             CurrentStateData = new NodeDataState(term);
@@ -54,18 +54,22 @@ namespace NLeaderElection
 
         public void SendHeartBeatMessage()
         {
-            foreach (var follower in Followers)
+            Logger.Log("INFO :: Initiating sending heartbeat signals.");
+            var dummyFollowers = NodeRegistryCache.GetInstance().Get();
+            foreach (var follower in dummyFollowers)
             {
                 try
                 {
-                    follower.HeartBeatSignalFromLeader(CurrentStateData.Term);
+                    //Messaging.MessageBroker.GetInstance().
+                    //follower.HeartBeatSignalFromLeader(CurrentStateData.Term);
                 }
                 catch (Exception exp)
                 {
                     Logger.Log(exp);
                 }
             }
-
+            if (dummyFollowers == null || dummyFollowers.Count == 0)
+                Logger.Log("INFO :: No followers registered to the cluster Or Leader is not aware of any follower.");
         }
 
          public void Dispose()

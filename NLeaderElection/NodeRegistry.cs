@@ -50,20 +50,21 @@ namespace NLeaderElection
         public void PromoteFollowerToCandidate(Follower follower)
         {
             Candidate candidate = new Candidate(follower.GetNodeId(),follower.GetIP(),follower.GetTerm());
-            candidate.CurrentStateData = follower.CurrentStateData;
             candidate.IP =  follower.IP;
             candidate.UpdateTerm(follower.GetTerm());
             this.CurrentNode = candidate;
+            Logger.Log(string.Format("{0} promoted to Candidate {1} .",follower,candidate));
+            candidate.SendRequestVotesToFollowers();
         }
 
         internal void PromoteCandidateToLeader(Candidate candidate)
         {
-            
             Leader leader = new Leader(candidate.GetNodeId(),candidate.GetIP(),candidate.GetTerm());
-            leader.CurrentStateData = candidate.CurrentStateData;
             candidate.IP = candidate.IP;
             candidate.UpdateTerm(candidate.GetTerm());
             this.CurrentNode = leader;
+            Logger.Log(string.Format("{0} promoted to Leader {1} .", candidate, leader));
+            leader.SendHeartBeatMessage();
         }
     }
 }
