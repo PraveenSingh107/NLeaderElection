@@ -34,6 +34,7 @@ namespace NLeaderElection
             : base(nodeId, address,term)
         {
             SetupTimeouts();
+            CurrentStateData = new NodeDataState(term);
         }
 
         private void SetupTimeouts()
@@ -55,12 +56,14 @@ namespace NLeaderElection
         {
             NodeRegistryCache.GetInstance().PromoteFollowerToCandidate(this);
             HeartBeatTimeout.Stop();
-            NetworkDiscoveryTimeout.Stop();
+            HeartBeatTimeout.Close();
             Dispose();
         }
 
         private void ElectionTimeout_Elapsed(object sender, ElapsedEventArgs e)
         {
+            NetworkDiscoveryTimeout.Stop();
+            NetworkDiscoveryTimeout.Close();
             Logger.Log(string.Format("Network bootstrap timed out."));
             StartTimouts();
             Logger.Log(string.Format("Heartbeat timeout started."));
@@ -129,6 +132,7 @@ namespace NLeaderElection
 
         public virtual void HeartBeatSignalReceivedFromLeader(long term)
         {
+            Logger.Log(string.Format("INFO :: Received the heartbeat signal from leader for term {0} .", term));
             if (IsServingCurrentTerm(term))
             {
                 HeartBeatTimeout_Reset();

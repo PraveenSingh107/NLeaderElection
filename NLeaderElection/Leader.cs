@@ -22,7 +22,7 @@ namespace NLeaderElection
             : base(nodeId)
         {
             Followers = new List<Follower>();
-            heartBeatTimeout = new Timer(1000);
+            heartBeatTimeout = new Timer(200);
             heartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
             heartBeatTimeout.Start();
 
@@ -34,7 +34,7 @@ namespace NLeaderElection
             : base(nodeId, ip, term)
         {
             Followers = new List<Follower>();
-            heartBeatTimeout = new Timer(1000);
+            heartBeatTimeout = new Timer(200);
             heartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
             heartBeatTimeout.Start();
             CurrentStateData = new NodeDataState(term);
