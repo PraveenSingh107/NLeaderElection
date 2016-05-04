@@ -34,13 +34,14 @@ namespace NLeaderElection
             : base(nodeId, address,term)
         {
             SetupTimeouts();
+            CurrentStateData = new NodeDataState(term);
         }
 
         private void SetupTimeouts()
         {
             NetworkDiscoveryTimeout = new Timer(8000);
             HeartBeatTimeout = new Timer(500);
-            NetworkDiscoveryTimeout.Elapsed += ElectionTimeout_Elapsed;
+            NetworkDiscoveryTimeout.Elapsed += NetworkBootStrapTimeElapsed;
             HeartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
             NetworkDiscoveryTimeout.Start();
             //HeartBeatTimeout.Start();
@@ -55,12 +56,16 @@ namespace NLeaderElection
         {
             NodeRegistryCache.GetInstance().PromoteFollowerToCandidate(this);
             HeartBeatTimeout.Stop();
-            NetworkDiscoveryTimeout.Stop();
-            Dispose();
+            HeartBeatTimeout.Close();
+            //Dispose();
         }
 
-        private void ElectionTimeout_Elapsed(object sender, ElapsedEventArgs e)
+        private void NetworkBootStrapTimeElapsed(object sender, ElapsedEventArgs e)
         {
+            NetworkDiscoveryTimeout.Stop();
+            NetworkDiscoveryTimeout.Elapsed -= NetworkBootStrapTimeElapsed;
+            NetworkDiscoveryTimeout.Close();
+
             Logger.Log(string.Format("Network bootstrap timed out."));
             StartTimouts();
             Logger.Log(string.Format("Heartbeat timeout started."));
@@ -70,7 +75,6 @@ namespace NLeaderElection
         {
             HeartBeatTimeout.Stop();
             HeartBeatTimeout.Start();
-            Logger.Log(string.Format("{0}'s heartbeat timed out.",this.ToString()));
         }
 
         private void ElectionTimeout_Reset()
@@ -129,6 +133,7 @@ namespace NLeaderElection
 
         public virtual void HeartBeatSignalReceivedFromLeader(long term)
         {
+            Logger.Log(string.Format("INFO :: Received the heartbeat signal from leader for term {0} .",term));
             if (IsServingCurrentTerm(term))
             {
                 HeartBeatTimeout_Reset();
