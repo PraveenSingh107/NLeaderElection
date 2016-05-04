@@ -333,7 +333,7 @@ namespace NLeaderElection.Messaging
                 candidateConnectDone.WaitOne();
 
                 // Send test data to the remote device.
-                string startUpMsg = ipAddress.ToString() + "##<EOF>";
+                string startUpMsg = NodeRegistryCache.GetInstance().IP.ToString() + "##<EOF>";
                 SendStartupNotification(candidate, startUpMsg);
                 candidateSendDone.WaitOne();
 
