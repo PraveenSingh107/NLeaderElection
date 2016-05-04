@@ -12,8 +12,8 @@ namespace NLeaderElection
     public abstract class Node
     {
         protected string nodeId;
-        public IPAddress IP { get;set;}
-        protected long term;
+        public IPAddress IP { get; set; }
+        //protected long term;
 
         public Node(string nodeId)
         {
@@ -25,9 +25,9 @@ namespace NLeaderElection
             
             if (IPs.Count() > 1)
                 throw new MoreThanOneIPAddressConfigured("Critical :: More than one IP addresses are registered. Please bind single IP.");
-           
+
             IP = IPs[0];
-            term = 1;
+            //term = 1;
         }
 
         public Node(string nodeId, string IPAddress)
@@ -43,31 +43,21 @@ namespace NLeaderElection
                 throw new MoreThanOneIPAddressConfigured("Please bind single IP.");
 
             IP = IPs[0];
-            term = 1;
         }
 
         public Node(string nodeId, IPAddress IPAddress, long termPassed)
         {
             this.nodeId = nodeId;
             IP = IPAddress;
-            term = termPassed;
+            //term = termPassed;
         }
 
-        public long GetTerm()
-        {
-            return this.term;
-        }
-
-        public void UpdateTerm(long term)
-        {
-            this.term = term;   
-        }
-
-        public void IncrementTerm()
-        {
-            term++;
-        }
-
+        public abstract long GetTerm();
+        
+        public abstract void UpdateTerm(long term);
+        
+        public abstract void IncrementTerm();
+        
         public Node(string nodeId, IPAddress ipAddress)
         {
             this.nodeId = nodeId;

@@ -101,5 +101,20 @@ namespace NLeaderElection
             Logger.Log(string.Format("INFO :: Received heartbeat message from leader."));
             NodeRegistryCache.GetInstance().DemoteLeaderToFollower();
         }
+
+        public override long GetTerm()
+        {
+            return this.CurrentStateData.Term;
+        }
+
+        public override void UpdateTerm(long term)
+        {
+            this.CurrentStateData.Term = term;
+        }
+
+        public override void IncrementTerm()
+        {
+            this.CurrentStateData.Term++;
+        }
     }
 }

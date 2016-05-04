@@ -133,12 +133,12 @@ namespace NLeaderElection
         {
             if (positiveVotes != null)
             {
-                if (!positiveVotes.ContainsKey(response.FollowerId) && this.term == response.Term)
+                if (!positiveVotes.ContainsKey(response.FollowerId) && this.CurrentStateData.Term == response.Term)
                 {
                     positiveVotes.Add(response.FollowerId, response.Term);
                     totalResponseReceivedForCurrentTerm++;
                 }
-                else if (this.term == response.Term)
+                else if (this.CurrentStateData.Term == response.Term)
                 {
                     positiveVotes[response.FollowerId] = response.Term;
                     totalResponseReceivedForCurrentTerm++;
@@ -179,12 +179,12 @@ namespace NLeaderElection
 
         internal int HeartBeatSignalReceivedFromLeader(long p)
         {
-            if (IsServingCurrentTerm(term))
+            if (IsServingCurrentTerm(this.CurrentStateData.Term))
             {
                 NodeRegistryCache.GetInstance().DemoteCandidateToFollower();
                 return 0;
             }
-            else if (IsWorkingOnStaleTerm(term))
+            else if (IsWorkingOnStaleTerm(this.CurrentStateData.Term))
             {
                 UpdateNodeLogEntries();
                 return 0;
@@ -211,6 +211,21 @@ namespace NLeaderElection
             if (CurrentStateData.Term < term)
                 return true;
             return false;
+        }
+
+        public override long GetTerm()
+        {
+            return this.CurrentStateData.Term;
+        }
+
+        public override void UpdateTerm(long term)
+        {
+            this.CurrentStateData.Term = term;
+        }
+
+        public override void IncrementTerm()
+        {
+            this.CurrentStateData.Term++;
         }
     }
 }
