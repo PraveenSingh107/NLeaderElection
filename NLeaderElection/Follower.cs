@@ -65,7 +65,7 @@ namespace NLeaderElection
             NetworkDiscoveryTimeout.Stop();
             NetworkDiscoveryTimeout.Elapsed -= NetworkBootStrapTimeElapsed;
             NetworkDiscoveryTimeout.Close();
-
+            NetworkDiscoveryTimeout = null;
             Logger.Log(string.Format("Network bootstrap timed out."));
             StartTimouts();
             Logger.Log(string.Format("Heartbeat timeout started."));
