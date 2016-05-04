@@ -99,7 +99,7 @@ namespace NLeaderElection
 
         internal void HeartBeatSignalReceivedFromLeader(long p)
         {
-            throw new NotImplementedException();
+            Logger.Log(string.Format("INFO :: Received heartbeat message from leader."));
         }
     }
 }
