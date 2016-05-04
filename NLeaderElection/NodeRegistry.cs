@@ -29,7 +29,8 @@ namespace NLeaderElection
 
         public void Register(DummyFollowerNode node)
         {
-            nodes.Add(node);
+            if(!nodes.Contains(node))
+                nodes.Add(node);
         }
 
         public List<DummyFollowerNode> Get()
@@ -49,9 +50,10 @@ namespace NLeaderElection
     
         public void PromoteFollowerToCandidate(Follower follower)
         {
-            Candidate candidate = new Candidate(follower.GetNodeId(),follower.GetIP(),follower.CurrentStateData.Term);
+            Candidate candidate = new Candidate(follower.GetNodeId(),follower.GetIP());
             candidate.IP =  follower.IP;
             candidate.UpdateTerm(follower.CurrentStateData.Term);
+            candidate.IncrementTerm();
             this.CurrentNode = candidate;
             Logger.Log(string.Format("{0} promoted to Candidate {1} .",follower,candidate));
             candidate.SendRequestVotesToFollowers();
@@ -86,7 +88,7 @@ namespace NLeaderElection
         internal void DemoteCandidateToFollower()
         {
             Candidate candidate = (CurrentNode as Candidate);
-            Follower follower = new Follower(candidate.GetNodeId(), candidate.GetIP(), candidate.CurrentStateData.Term);
+            Follower follower = new Follower(candidate.GetNodeId(), candidate.GetIP());
             follower.UpdateTerm(candidate.CurrentStateData.Term);
             this.CurrentNode = follower;
             candidate.Dispose();
@@ -96,7 +98,7 @@ namespace NLeaderElection
         internal void DemoteLeaderToFollower()
         {
             Leader leader = (CurrentNode as Leader);
-            Follower follower = new Follower(leader.GetNodeId(), leader.GetIP(), leader.CurrentStateData.Term);
+            Follower follower = new Follower(leader.GetNodeId(), leader.GetIP());
             follower.UpdateTerm(leader.CurrentStateData.Term);
             this.CurrentNode = follower;
             leader.Dispose();

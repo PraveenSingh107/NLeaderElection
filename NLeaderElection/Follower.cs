@@ -19,15 +19,17 @@ namespace NLeaderElection
         public Follower() : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
         {
             SetupTimeouts();
-            
+            CurrentStateData.Term  = 1;
         }
 
-        public Follower(IPAddress address) : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"), address)
+        public Follower(IPAddress address) : base(address,DateTime.Now.ToString("yyyyMMddHHmmssffff"))
         {
             SetupTimeouts();
+            CurrentStateData.Term = 1;
         }
 
-        public Follower(string nodeId,IPAddress address,long term) : base(nodeId, address,term)
+        public Follower(string nodeId, IPAddress address)
+            : base(address,nodeId)
         {
             SetupTimeouts();
         }
@@ -36,7 +38,7 @@ namespace NLeaderElection
         {
             HeartBeatTimeout = new Timer(500);
             HeartBeatTimeout.Elapsed += HeartBeatTimeoutElapsed;
-            CurrentStateData = new NodeDataState(1);
+            CurrentStateData = new NodeDataState();
         }
 
         public void StartNetworkBootstrap()

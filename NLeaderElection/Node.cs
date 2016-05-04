@@ -13,16 +13,15 @@ namespace NLeaderElection
     {
         protected string nodeId;
         public IPAddress IP { get; set; }
-        //protected long term;
 
         public Node(string nodeId)
         {
             this.nodeId = nodeId;
-            
+
             IPAddress[] IPs = Array.FindAll(
                 Dns.GetHostEntry(string.Empty).AddressList,
                 a => a.AddressFamily == AddressFamily.InterNetwork);
-            
+
             if (IPs.Count() > 1)
                 throw new MoreThanOneIPAddressConfigured("Critical :: More than one IP addresses are registered. Please bind single IP.");
 
@@ -45,24 +44,17 @@ namespace NLeaderElection
             IP = IPs[0];
         }
 
-        public Node(string nodeId, IPAddress IPAddress, long termPassed)
+        public Node(IPAddress IPAddress, string nodeId)
         {
             this.nodeId = nodeId;
             IP = IPAddress;
-            //term = termPassed;
         }
 
         public abstract long GetTerm();
-        
+
         public abstract void UpdateTerm(long term);
-        
+
         public abstract void IncrementTerm();
-        
-        public Node(string nodeId, IPAddress ipAddress)
-        {
-            this.nodeId = nodeId;
-            IP = ipAddress;
-        }
 
         public string GetNodeId()
         {

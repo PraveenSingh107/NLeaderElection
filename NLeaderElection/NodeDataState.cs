@@ -12,9 +12,14 @@ namespace NLeaderElection
         public bool Voted { get; set; }
         public string LeaderId { get; set; }
 
-        public NodeDataState(long term)
+        public NodeDataState()
         {
-            this.Term = term;
+            this.Term = -1;
+        }
+
+        internal void SetTerm(long term)
+        {
+            throw new NotImplementedException();
         }
     }
 }

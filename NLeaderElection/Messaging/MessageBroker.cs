@@ -115,6 +115,10 @@ namespace NLeaderElection.Messaging
                 // Signal that the connection has been made.
                 leaderConnectDone.Set();
             }
+            catch (SocketException socketExp)
+            {
+                Logger.Log(socketExp.Message);
+            }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());

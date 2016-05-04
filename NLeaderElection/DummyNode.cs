@@ -11,7 +11,7 @@ namespace NLeaderElection
     {
         public long term;
         public DummyFollowerNode(IPAddress address)
-            : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"), address)
+            : base(address, DateTime.Now.ToString("yyyyMMddHHmmssffff"))
         {
 
         }
@@ -35,6 +35,21 @@ namespace NLeaderElection
         public override void IncrementTerm()
         {
             this.term++;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+            DummyFollowerNode otherNode = (obj as DummyFollowerNode);
+            return IP.Equals(otherNode.IP);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.IP.GetHashCode();
         }
     }
 }

@@ -25,19 +25,18 @@ namespace NLeaderElection
             heartBeatTimeout = new Timer(200);
             heartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
             heartBeatTimeout.Start();
-
-            // not sure
-            CurrentStateData = new NodeDataState(1);
+            CurrentStateData = new NodeDataState();
         }
 
         public Leader(string nodeId, IPAddress ip, long term)
-            : base(nodeId, ip, term)
+            : base(ip, nodeId)
         {
             Followers = new List<Follower>();
             heartBeatTimeout = new Timer(200);
             heartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
             heartBeatTimeout.Start();
-            CurrentStateData = new NodeDataState(term);
+            CurrentStateData = new NodeDataState();
+            CurrentStateData.SetTerm(term);
         }
         
 

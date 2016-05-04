@@ -28,15 +28,14 @@ namespace NLeaderElection
 
         private void Setup()
         {
-
-            CurrentStateData = new NodeDataState(1);
+            CurrentStateData = new NodeDataState();
             electionTimeout = new Timer(4000);
             electionTimeout.Elapsed += electionTimeout_Elapsed;
             electionTimeout.Start();
         }
 
-        public Candidate(string nodeId,IPAddress ipAddress,long termPassed)
-            : base(nodeId,ipAddress,termPassed)
+        public Candidate(string nodeId,IPAddress ipAddress)
+            : base(ipAddress, nodeId)
         {
             Setup();
         }
