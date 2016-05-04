@@ -14,7 +14,7 @@ namespace NLeaderElection.Messaging
         private readonly static Int32 FOLLOWER_PORT_NUMBER = 11000;
         private readonly static Int32 CANDIDATE_PORT_NUMBER = 11001;
         private readonly static Int32 STARTUP_PORT_NUMBER = 11002;
-        private readonly static Int32 HEARTBEAT_PORT_NUMBER = 11002;
+        private readonly static Int32 HEARTBEAT_PORT_NUMBER = 11004;
         public static ManualResetEvent followerAsyncHandler = new ManualResetEvent(false);
         public static ManualResetEvent candidateAsyncHandler = new ManualResetEvent(false);
         public static ManualResetEvent startupAsyncHandler = new ManualResetEvent(false);
@@ -45,8 +45,7 @@ namespace NLeaderElection.Messaging
             try
             {
                 socketListener.Bind(endPoint);
-                Logger.Log("INFO :: Node started Listening on port " + FOLLOWER_PORT_NUMBER + " .");
-                Logger.Log("Candidate started Listening on port " + CANDIDATE_PORT_NUMBER + " .");
+                Logger.Log("INFO :: Node started Listening for heartbeat signals on port " + HEARTBEAT_PORT_NUMBER + " .");
                 socketListener.Listen(1000);
                 
                 while (true)
