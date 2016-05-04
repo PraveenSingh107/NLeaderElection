@@ -14,13 +14,14 @@ namespace NLeaderElection.Messaging
         private readonly static Int32 FOLLOWER_PORT_NUMBER = 11000;
         private readonly static Int32 CANDIDATE_PORT_NUMBER = 11001;
         private readonly static Int32 STARTUP_PORT_NUMBER = 11002;
-        private readonly static Int32 HEARTBEAT_PORT_NUMBER = 11002;
+        private readonly static Int32 HEARTBEAT_PORT_NUMBER = 11004;
         public static ManualResetEvent followerAsyncHandler = new ManualResetEvent(false);
         public static ManualResetEvent candidateAsyncHandler = new ManualResetEvent(false);
+        public static ManualResetEvent heartbeatAsyncHandler = new ManualResetEvent(false);
         public static ManualResetEvent startupAsyncHandler = new ManualResetEvent(false);
-        public static ManualResetEvent candidatePortListener = new ManualResetEvent(false);
-        public static ManualResetEvent followerPortListener = new ManualResetEvent(false);
-        public static ManualResetEvent heartBeatPortListener = new ManualResetEvent(false);
+        public static ManualResetEvent candidatePortSwitch = new ManualResetEvent(false);
+        public static ManualResetEvent followerPortSwitch = new ManualResetEvent(false);
+        public static ManualResetEvent heartBeatPortSwitch = new ManualResetEvent(false);
 
         public static void StartListeningOnPorts()
         {
@@ -28,9 +29,9 @@ namespace NLeaderElection.Messaging
             Task.Run(() => { WaitForRequestVotesFromCandidateAsync(); });
             Task.Run(() => { WaitForStartupMessageFromFollowerAsync(); });
             Task.Run(() => { WaitForHeartbeatMessageFromLeaderAsync(); });
-            candidatePortListener.WaitOne();
-            followerPortListener.WaitOne();
-            heartBeatPortListener.WaitOne();
+            candidatePortSwitch.WaitOne();
+            followerPortSwitch.WaitOne();
+            heartBeatPortSwitch.WaitOne();
         }
 
         private static void WaitForHeartbeatMessageFromLeaderAsync()
@@ -45,15 +46,15 @@ namespace NLeaderElection.Messaging
             try
             {
                 socketListener.Bind(endPoint);
-                Logger.Log("INFO :: Node started Listening on port " + FOLLOWER_PORT_NUMBER + " .");
-                Logger.Log("Candidate started Listening on port " + CANDIDATE_PORT_NUMBER + " .");
+                Logger.Log("INFO :: Node started Listening for heartbeat signals on port " + HEARTBEAT_PORT_NUMBER + " .");
                 socketListener.Listen(1000);
                 
                 while (true)
                 {
-                    heartBeatPortListener.Reset();
+                    heartbeatAsyncHandler.Reset();
                     socketListener.BeginAccept(HeartbeatAcceptCallback, socketListener);
-                    heartBeatPortListener.WaitOne();
+                    heartBeatPortSwitch.Set();
+                    heartbeatAsyncHandler.WaitOne();
                 }
             }
             catch (Exception)
@@ -64,7 +65,7 @@ namespace NLeaderElection.Messaging
 
         private static void HeartbeatAcceptCallback(IAsyncResult ar)
         {
-            heartBeatPortListener.Set();
+            heartbeatAsyncHandler.Set();
 
             Socket listener = (Socket)ar.AsyncState;
             Socket handler = listener.EndAccept(ar);
@@ -131,7 +132,7 @@ namespace NLeaderElection.Messaging
                     candidateAsyncHandler.Reset();
                     followerListener.BeginAccept(FollowerAcceptCallback, followerListener);
                     candidateListener.BeginAccept(CandidateAcceptCallback, candidateListener);
-                    candidatePortListener.Set();
+                    candidatePortSwitch.Set();
                     followerAsyncHandler.WaitOne();
                     candidateAsyncHandler.WaitOne();
                 }
@@ -262,7 +263,7 @@ namespace NLeaderElection.Messaging
                 {
                     startupAsyncHandler.Reset();
                     startupFollowerListener.BeginAccept(StartupFollowerAcceptCallback, startupFollowerListener);
-                    followerPortListener.Set();
+                    followerPortSwitch.Set();
                     startupAsyncHandler.WaitOne();
                 }
             }

@@ -20,7 +20,7 @@ namespace NLeaderElection.Tests
             return heartBeatTimeoutCounts;
         }
 
-        public override void HeartBeatSignalFromLeader(long term)
+        public override void HeartBeatSignalReceivedFromLeader(long term)
         {
             heartBeatTimeoutCounts++;
         }
