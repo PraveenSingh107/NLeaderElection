@@ -51,6 +51,7 @@ namespace NLeaderElection.Client
             RequestListener.StartListeningOnPorts();
             RegisterCluster(args);
             follower.StartUp();
+            follower.StartNetworkBootstrap();
         }
 
         private static string GetBindedIpAddress(string[] args)

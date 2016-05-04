@@ -16,48 +16,46 @@ namespace NLeaderElection
         private static Timer HeartBeatTimeout;
         public NodeDataState CurrentStateData { get; set; }
 
-        public Follower()
-            : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
+        public Follower() : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
         {
             SetupTimeouts();
-            CurrentStateData = new NodeDataState(1);
+            
         }
 
-        public Follower(IPAddress address)
-            : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"), address)
+        public Follower(IPAddress address) : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"), address)
         {
             SetupTimeouts();
-            CurrentStateData = new NodeDataState(1);
         }
 
-        public Follower(string nodeId,IPAddress address,long term)
-            : base(nodeId, address,term)
+        public Follower(string nodeId,IPAddress address,long term) : base(nodeId, address,term)
         {
             SetupTimeouts();
-            CurrentStateData = new NodeDataState(term);
         }
 
         private void SetupTimeouts()
         {
-            NetworkDiscoveryTimeout = new Timer(8000);
             HeartBeatTimeout = new Timer(500);
-            NetworkDiscoveryTimeout.Elapsed += NetworkBootStrapTimeElapsed;
-            HeartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
-            NetworkDiscoveryTimeout.Start();
-            //HeartBeatTimeout.Start();
+            HeartBeatTimeout.Elapsed += HeartBeatTimeoutElapsed;
+            CurrentStateData = new NodeDataState(1);
         }
 
-        public void StartTimouts()
+        public void StartNetworkBootstrap()
+        {
+            NetworkDiscoveryTimeout = new Timer(8000);
+            NetworkDiscoveryTimeout.Elapsed += NetworkBootStrapTimeElapsed;
+            NetworkDiscoveryTimeout.Start();
+        }
+
+        public void StartHeartbeatTimouts()
         {
             HeartBeatTimeout.Start();
         }
 
-        private void HeartBeatTimeout_Elapsed(object sender, ElapsedEventArgs e)
+        private void HeartBeatTimeoutElapsed(object sender, ElapsedEventArgs e)
         {
             NodeRegistryCache.GetInstance().PromoteFollowerToCandidate(this);
             HeartBeatTimeout.Stop();
             HeartBeatTimeout.Close();
-            //Dispose();
         }
 
         private void NetworkBootStrapTimeElapsed(object sender, ElapsedEventArgs e)
@@ -67,7 +65,7 @@ namespace NLeaderElection
             NetworkDiscoveryTimeout.Close();
             NetworkDiscoveryTimeout = null;
             Logger.Log(string.Format("Network bootstrap timed out."));
-            StartTimouts();
+            StartHeartbeatTimouts();
             Logger.Log(string.Format("Heartbeat timeout started."));
         }
 
@@ -133,7 +131,8 @@ namespace NLeaderElection
 
         public virtual void HeartBeatSignalReceivedFromLeader(long term)
         {
-            Logger.Log(string.Format("INFO :: Received the heartbeat signal from leader for term {0} .",term));
+            Logger.Log(string.Format("INFO :: Received the heartbeat signal from leader for term {0} .", term));
+
             if (IsServingCurrentTerm(term))
             {
                 HeartBeatTimeout_Reset();
@@ -214,6 +213,21 @@ namespace NLeaderElection
         internal IPAddress GetIP()
         {
             return IP;
+        }
+
+        public override long GetTerm()
+        {
+            return this.CurrentStateData.Term;
+        }
+
+        public override void UpdateTerm(long term)
+        {
+            this.CurrentStateData.Term = term;
+        }
+
+        public override void IncrementTerm()
+        {
+            this.CurrentStateData.Term++;
         }
     }
 }

@@ -361,7 +361,7 @@ namespace NLeaderElection.Messaging
             var follower = NodeRegistryCache.GetInstance().CurrentNode as Follower;
             if (follower != null)
             {
-                follower.StartTimouts();
+                follower.StartHeartbeatTimouts();
             }
         }
 

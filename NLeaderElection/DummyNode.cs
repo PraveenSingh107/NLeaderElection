@@ -9,6 +9,7 @@ namespace NLeaderElection
 {
     public class DummyFollowerNode : Node
     {
+        public long term;
         public DummyFollowerNode(IPAddress address)
             : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"), address)
         {
@@ -19,6 +20,21 @@ namespace NLeaderElection
         public override string ToString()
         {
             return IP.ToString();
+        }
+
+        public override long GetTerm()
+        {
+            return term;
+        }
+
+        public override void UpdateTerm(long term)
+        {
+            this.term = term;
+        }
+
+        public override void IncrementTerm()
+        {
+            this.term++;
         }
     }
 }
