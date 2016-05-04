@@ -61,7 +61,7 @@ namespace NLeaderElection
             {
                 try
                 {
-                    MessageBroker.GetInstance().LeaderSendHeartbeatAsync(follower,this.GetTerm());
+                    MessageBroker.GetInstance().LeaderSendHeartbeatAsync(follower, this.CurrentStateData.Term);
                 }
                 catch (Exception exp)
                 {
@@ -100,6 +100,7 @@ namespace NLeaderElection
         internal void HeartBeatSignalReceivedFromLeader(long p)
         {
             Logger.Log(string.Format("INFO :: Received heartbeat message from leader."));
+            NodeRegistryCache.GetInstance().DemoteLeaderToFollower();
         }
     }
 }
