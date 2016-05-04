@@ -15,16 +15,19 @@ namespace NLeaderElection
         private static Timer NetworkDiscoveryTimeout;
         private static Timer HeartBeatTimeout;
         public NodeDataState CurrentStateData { get; set; }
-        
-        public Follower() : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
+
+        public Follower()
+            : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
         {
             SetupTimeouts();
+            CurrentStateData = new NodeDataState(1);
         }
 
         public Follower(IPAddress address)
-            : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"),address)
+            : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"), address)
         {
             SetupTimeouts();
+            CurrentStateData = new NodeDataState(1);
         }
 
         public Follower(string nodeId,IPAddress address,long term)

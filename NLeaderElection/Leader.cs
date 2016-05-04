@@ -61,7 +61,7 @@ namespace NLeaderElection
             {
                 try
                 {
-                    MessageBroker.GetInstance().LeaderSendHeartbeatAsync(follower,this.GetTerm());
+                    MessageBroker.GetInstance().LeaderSendHeartbeatAsync(follower,this.CurrentStateData.Term);
                 }
                 catch (Exception exp)
                 {
@@ -91,7 +91,6 @@ namespace NLeaderElection
             Dispose(false);
         }
 
-        
         internal IPAddress GetIP()
         {
             return IP;

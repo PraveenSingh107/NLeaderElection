@@ -49,9 +49,9 @@ namespace NLeaderElection
     
         public void PromoteFollowerToCandidate(Follower follower)
         {
-            Candidate candidate = new Candidate(follower.GetNodeId(),follower.GetIP(),follower.GetTerm());
+            Candidate candidate = new Candidate(follower.GetNodeId(),follower.GetIP(),follower.CurrentStateData.Term);
             candidate.IP =  follower.IP;
-            candidate.UpdateTerm(follower.GetTerm());
+            candidate.UpdateTerm(follower.CurrentStateData.Term);
             this.CurrentNode = candidate;
             Logger.Log(string.Format("{0} promoted to Candidate {1} .",follower,candidate));
             candidate.SendRequestVotesToFollowers();
@@ -59,9 +59,9 @@ namespace NLeaderElection
 
         internal void PromoteCandidateToLeader(Candidate candidate)
         {
-            Leader leader = new Leader(candidate.GetNodeId(),candidate.GetIP(),candidate.GetTerm());
+            Leader leader = new Leader(candidate.GetNodeId(),candidate.GetIP(),candidate.CurrentStateData.Term);
             candidate.IP = candidate.IP;
-            candidate.UpdateTerm(candidate.GetTerm());
+            candidate.UpdateTerm(candidate.CurrentStateData.Term);
             this.CurrentNode = leader;
             Logger.Log(string.Format("{0} promoted to Leader {1} .", candidate, leader));
         }
@@ -86,8 +86,8 @@ namespace NLeaderElection
         internal void DemoteCandidateToFollower()
         {
             Candidate candidate = (CurrentNode as Candidate);
-            Follower follower = new Follower(candidate.GetNodeId(), candidate.GetIP(), candidate.GetTerm());
-            follower.UpdateTerm(candidate.GetTerm());
+            Follower follower = new Follower(candidate.GetNodeId(), candidate.GetIP(), candidate.CurrentStateData.Term);
+            follower.UpdateTerm(candidate.CurrentStateData.Term);
             this.CurrentNode = follower;
             candidate.Dispose();
             Logger.Log(string.Format("{0} demoted to Follower {1} .", candidate, follower));
@@ -96,8 +96,8 @@ namespace NLeaderElection
         internal void DemoteLeaderToFollower()
         {
             Leader leader = (CurrentNode as Leader);
-            Follower follower = new Follower(leader.GetNodeId(), leader.GetIP(), leader.GetTerm());
-            follower.UpdateTerm(leader.GetTerm());
+            Follower follower = new Follower(leader.GetNodeId(), leader.GetIP(), leader.CurrentStateData.Term);
+            follower.UpdateTerm(leader.CurrentStateData.Term);
             this.CurrentNode = follower;
             leader.Dispose();
             Logger.Log(string.Format("{0} demoted to Follower {1} .", leader, follower));
