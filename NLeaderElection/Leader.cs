@@ -99,6 +99,7 @@ namespace NLeaderElection
         internal void HeartBeatSignalReceivedFromLeader(long p)
         {
             Logger.Log(string.Format("INFO :: Received heartbeat message from leader."));
+            NodeRegistryCache.GetInstance().DemoteLeaderToFollower();
         }
     }
 }

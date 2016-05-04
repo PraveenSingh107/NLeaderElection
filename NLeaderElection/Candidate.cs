@@ -54,7 +54,7 @@ namespace NLeaderElection
             {
                 NodeRegistryCache.GetInstance().PromoteCandidateToLeader(this);
                 electionTimeout.Stop();
-                Dispose();
+                //Dispose();
             }
         }
 

@@ -41,7 +41,7 @@ namespace NLeaderElection
         {
             NetworkDiscoveryTimeout = new Timer(8000);
             HeartBeatTimeout = new Timer(500);
-            NetworkDiscoveryTimeout.Elapsed += ElectionTimeout_Elapsed;
+            NetworkDiscoveryTimeout.Elapsed += NetworkBootStrapTimeElapsed;
             HeartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
             NetworkDiscoveryTimeout.Start();
             //HeartBeatTimeout.Start();
@@ -57,12 +57,12 @@ namespace NLeaderElection
             NodeRegistryCache.GetInstance().PromoteFollowerToCandidate(this);
             HeartBeatTimeout.Stop();
             HeartBeatTimeout.Close();
-            Dispose();
         }
 
-        private void ElectionTimeout_Elapsed(object sender, ElapsedEventArgs e)
+        private void NetworkBootStrapTimeElapsed(object sender, ElapsedEventArgs e)
         {
             NetworkDiscoveryTimeout.Stop();
+            NetworkDiscoveryTimeout.Elapsed -= NetworkBootStrapTimeElapsed;
             NetworkDiscoveryTimeout.Close();
             Logger.Log(string.Format("Network bootstrap timed out."));
             StartTimouts();
@@ -73,7 +73,6 @@ namespace NLeaderElection
         {
             HeartBeatTimeout.Stop();
             HeartBeatTimeout.Start();
-            Logger.Log(string.Format("{0}'s heartbeat timed out.",this.ToString()));
         }
 
         private void ElectionTimeout_Reset()
@@ -132,7 +131,11 @@ namespace NLeaderElection
 
         public virtual void HeartBeatSignalReceivedFromLeader(long term)
         {
+<<<<<<< HEAD
             Logger.Log(string.Format("INFO :: Received the heartbeat signal from leader for term {0} .", term));
+=======
+            Logger.Log(string.Format("INFO :: Received the heartbeat signal from leader for term {0} .",term));
+>>>>>>> 6bf46844a52162f84f1fc0547d0d0afbd24d03c2
             if (IsServingCurrentTerm(term))
             {
                 HeartBeatTimeout_Reset();
