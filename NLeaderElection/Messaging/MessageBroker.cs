@@ -15,9 +15,9 @@ namespace NLeaderElection.Messaging
     /// </summary>
     public class MessageBroker : IDisposable
     {
-        
+
         #region Properties
-        
+
         private readonly static Int32 CANDIDATE_PORT_NUMBER = 11001;
         private readonly static Int32 STARTUP_PORT_NUMBER = 11002;
         private readonly static Int32 HEARTBEAT_PORT_NUMBER = 11004;
@@ -27,10 +27,10 @@ namespace NLeaderElection.Messaging
         private ManualResetEvent leaderConnectDone = new ManualResetEvent(false);
         private ManualResetEvent leaderSendDone = new ManualResetEvent(false);
         private ManualResetEvent startupRequestResponseReceiveDone = new ManualResetEvent(false);
-        
+
         #endregion Properties
 
-        private MessageBroker(){}
+        private MessageBroker() { }
 
         public static MessageBroker GetInstance()
         {
@@ -41,6 +41,7 @@ namespace NLeaderElection.Messaging
 
         internal void LeaderSendHeartbeatAsync(Node node, long term)
         {
+            Socket senderSocket = null;
             // open a tcp connection to the node's socket.
             try
             {
@@ -49,7 +50,7 @@ namespace NLeaderElection.Messaging
                 IPEndPoint remoteEP = new IPEndPoint(ipAddress, HEARTBEAT_PORT_NUMBER);
 
                 // Create a TCP/IP socket.
-                Socket senderSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                senderSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
                 // Connect to the remote endpoint.
                 senderSocket.BeginConnect(remoteEP, new AsyncCallback(HeartbeatConnectCallback), senderSocket);
@@ -61,11 +62,6 @@ namespace NLeaderElection.Messaging
 
                 // Write the response to the console.
                 Logger.Log(string.Format("INFO :: Sent heartbeat signal to {0} .", node.ToString()));
-
-                // Release the socket.
-                senderSocket.Shutdown(SocketShutdown.Both);
-                senderSocket.Close();
-
             }
             catch (SocketException scExp)
             {
@@ -74,6 +70,14 @@ namespace NLeaderElection.Messaging
             catch (Exception e)
             {
                 Logger.Log(e.Message);
+            }
+            finally
+            {
+                if (senderSocket != null)
+                {
+                    senderSocket.Shutdown(SocketShutdown.Both);
+                    senderSocket.Close();
+                }
             }
         }
 
@@ -107,7 +111,7 @@ namespace NLeaderElection.Messaging
 
                 // Complete sending the data to the remote device.
                 int bytesSent = client.EndSend(ar);
-                
+
                 // Signal that all bytes have been sent.
                 leaderSendDone.Set();
             }
@@ -149,8 +153,9 @@ namespace NLeaderElection.Messaging
 
         # region Candidate Send Methods
 
-        internal  void CandidateSendRequestVoteAsync(Node node,long term)
+        internal void CandidateSendRequestVoteAsync(Node node, long term)
         {
+            Socket candidateSocket = null;
             // open a tcp connection to the node's socket.
             try
             {
@@ -159,22 +164,18 @@ namespace NLeaderElection.Messaging
                 IPEndPoint remoteEP = new IPEndPoint(ipAddress, CANDIDATE_PORT_NUMBER);
 
                 // Create a TCP/IP socket.
-                Socket candidate = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                candidateSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
                 // Connect to the remote endpoint.
-                candidate.BeginConnect(remoteEP, new AsyncCallback(ConnectCallback), candidate);
+                candidateSocket.BeginConnect(remoteEP, new AsyncCallback(ConnectCallback), candidateSocket);
                 candidateConnectDone.WaitOne();
 
                 // Send test data to the remote device.
-                Send(candidate, term + "##<EOF>");
+                Send(candidateSocket, term + "##<EOF>");
                 candidateSendDone.WaitOne();
 
                 // Write the response to the console.
                 Logger.Log(string.Format("Sent Request Vote RPC to {0} .", node.ToString()));
-
-                // Release the socket.
-                candidate.Shutdown(SocketShutdown.Both);
-                candidate.Close();
 
             }
             catch (SocketException scExp)
@@ -184,6 +185,15 @@ namespace NLeaderElection.Messaging
             catch (Exception e)
             {
                 Logger.Log(e.Message);
+            }
+            finally
+            {
+                // Release the socket.
+                if(candidateSocket != null)
+                {
+                    candidateSocket.Shutdown(SocketShutdown.Both);
+                    candidateSocket.Close();
+                }
             }
         }
 
@@ -242,7 +252,7 @@ namespace NLeaderElection.Messaging
                 // Complete the connection.
                 client.EndConnect(ar);
 
-                Console.WriteLine("Socket connected to {0}",  client.RemoteEndPoint.ToString());
+                Console.WriteLine("Socket connected to {0}", client.RemoteEndPoint.ToString());
 
                 // Signal that the connection has been made.
                 candidateConnectDone.Set();
@@ -304,7 +314,7 @@ namespace NLeaderElection.Messaging
             }
         }
 
-        private  void FollowerSendToCandidateCallback(IAsyncResult ar)
+        private void FollowerSendToCandidateCallback(IAsyncResult ar)
         {
             try
             {
@@ -328,13 +338,14 @@ namespace NLeaderElection.Messaging
                 Logger.Log(e.Message);
             }
         }
-       
+
         # endregion
 
         #region Node Startup Methods
 
         public void SendNodeStartupNotification(Node node)
         {
+            Socket candidateSocket = null;
             // open a tcp connection to the node's socket.
             try
             {
@@ -342,28 +353,24 @@ namespace NLeaderElection.Messaging
                 IPEndPoint remoteEP = new IPEndPoint(ipAddress, STARTUP_PORT_NUMBER);
 
                 // Create a TCP/IP socket.
-                Socket candidate = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                candidateSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
                 // Connect to the remote endpoint.
-                candidate.BeginConnect(remoteEP, new AsyncCallback(ConnectCallback), candidate);
+                candidateSocket.BeginConnect(remoteEP, new AsyncCallback(ConnectCallback), candidateSocket);
                 candidateConnectDone.WaitOne();
 
                 // Send test data to the remote device.
                 string startUpMsg = NodeRegistryCache.GetInstance().IP.ToString() + "##<EOF>";
-                SendStartupNotification(candidate, startUpMsg);
+                SendStartupNotification(candidateSocket, startUpMsg);
                 candidateSendDone.WaitOne();
 
                 // Receive the response from the remote device.
-                ReceiveStartupResposeAsync(candidate);
+                ReceiveStartupResposeAsync(candidateSocket);
                 startupRequestResponseReceiveDone.WaitOne();
                 // Write the response to the console.
                 // After letting the cluster know that a new node has been added. We can start the heartbeat timeout on the follower node.
                 StartFollowersHeartBeatTimeout();
                 Logger.Log(string.Format("Response received : {0}", response));
-
-                // Release the socket.
-                candidate.Shutdown(SocketShutdown.Both);
-                candidate.Close();
 
             }
             catch (SocketException scExp)
@@ -373,6 +380,13 @@ namespace NLeaderElection.Messaging
             catch (Exception e)
             {
                 Logger.Log(e.Message);
+            }
+            finally
+            {
+                // Release the socket.
+                candidateSocket.Shutdown(SocketShutdown.Both);
+                candidateSocket.Close();
+
             }
         }
 
@@ -436,7 +450,7 @@ namespace NLeaderElection.Messaging
                         response = state.sb.ToString();
                     }
                     // Signal that all bytes have been received.
-                    var responseEntries  = response.Split(new String[] {"##"},StringSplitOptions.RemoveEmptyEntries);
+                    var responseEntries = response.Split(new String[] { "##" }, StringSplitOptions.RemoveEmptyEntries);
                     if (responseEntries != null && responseEntries.Count() >= 2)
                     {
                         long defaultTerm = NodeRegistryCache.GetInstance().CurrentNode.GetTerm();
@@ -503,7 +517,7 @@ namespace NLeaderElection.Messaging
                 Logger.Log(e.Message);
             }
         }
-       
+
         #endregion
 
         # region Disposable
