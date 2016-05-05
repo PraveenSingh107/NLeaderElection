@@ -122,8 +122,8 @@ namespace NLeaderElection.Messaging
             {
                 followerListener.Bind(followerEndPoint);
                 candidateListener.Bind(candidateEndPoint);
-                Logger.Log("Follower started Listening on port " + FOLLOWER_PORT_NUMBER + " .");
-                Logger.Log("Candidate started Listening on port " + CANDIDATE_PORT_NUMBER + " .");
+                Logger.Log("INFO :: Follower started Listening on port " + FOLLOWER_PORT_NUMBER + " .");
+                Logger.Log("INFO :: Candidate started Listening on port " + CANDIDATE_PORT_NUMBER + " .");
                 followerListener.Listen(1000);
                 candidateListener.Listen(1000);
                 while (true)
@@ -256,7 +256,7 @@ namespace NLeaderElection.Messaging
             try
             {
                 startupFollowerListener.Bind(startupFollowerEndPoint);
-                Logger.Log(NodeRegistryCache.GetInstance().CurrentNode.ToString() + " started Listening on port " + STARTUP_PORT_NUMBER + " for new joining followers.");
+                Logger.Log("INFO :: Node started Listening on port " + STARTUP_PORT_NUMBER + " for new joining followers.");
                 startupFollowerListener.Listen(1000);
                 
                 while (true)

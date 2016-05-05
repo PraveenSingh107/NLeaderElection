@@ -36,7 +36,7 @@ namespace NLeaderElection
 
         private void SetupTimeouts()
         {
-            HeartBeatTimeout = new Timer(500);
+            HeartBeatTimeout = new Timer(2000);
             HeartBeatTimeout.Elapsed += HeartBeatTimeoutElapsed;
             CurrentStateData = new NodeDataState();
         }
