@@ -237,5 +237,10 @@ namespace NLeaderElection
         {
             this.CurrentStateData.Term++;
         }
+
+        internal long GetPreviousTerm()
+        {
+            return this.CurrentStateData.Term--;
+        }
     }
 }

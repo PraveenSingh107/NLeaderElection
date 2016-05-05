@@ -60,7 +60,7 @@
     <Compile Include="Messages\RequestVoteRPCResponse.cs" />
     <Compile Include="Messaging\MessageBroker.cs" />
     <Compile Include="NodeDataState.cs" />
-    <Compile Include="NodeRegistry.cs" />
+    <Compile Include="NodeRegistryCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
