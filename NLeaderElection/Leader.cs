@@ -23,7 +23,7 @@ namespace NLeaderElection
         {
             Followers = new List<Follower>();
             heartBeatTimeout = new Timer(200);
-            heartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
+            heartBeatTimeout.Elapsed += HeartBeatTimeoutElapsed;
             heartBeatTimeout.Start();
             CurrentStateData = new NodeDataState();
         }
@@ -33,14 +33,14 @@ namespace NLeaderElection
         {
             Followers = new List<Follower>();
             heartBeatTimeout = new Timer(200);
-            heartBeatTimeout.Elapsed += HeartBeatTimeout_Elapsed;
+            heartBeatTimeout.Elapsed += HeartBeatTimeoutElapsed;
             heartBeatTimeout.Start();
             CurrentStateData = new NodeDataState();
             CurrentStateData.SetTerm(term);
         }
         
 
-        private void HeartBeatTimeout_Elapsed(object sender, ElapsedEventArgs e)
+        private void HeartBeatTimeoutElapsed(object sender, ElapsedEventArgs e)
         {
             SendHeartBeatMessage();
             heartBeatTimeout.Stop();
@@ -114,6 +114,14 @@ namespace NLeaderElection
         public override void IncrementTerm()
         {
             this.CurrentStateData.Term++;
+        }
+
+        internal void DetachEventListerners()
+        {
+            if (heartBeatTimeout != null)
+            {
+                heartBeatTimeout.Elapsed -= HeartBeatTimeoutElapsed;
+            }
         }
     }
 }

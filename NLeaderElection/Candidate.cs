@@ -36,11 +36,19 @@ namespace NLeaderElection
         {
             CurrentStateData = new NodeDataState();
             electionTimeout = new Timer(4000);
-            electionTimeout.Elapsed += electionTimeout_Elapsed;
+            electionTimeout.Elapsed += electionTimeoutElapsed;
             electionTimeout.Start();
         }
 
-        void electionTimeout_Elapsed(object sender, ElapsedEventArgs e)
+        public void DetachEventListerners()
+        {
+            if (electionTimeout != null)
+            {
+                electionTimeout.Elapsed -= electionTimeoutElapsed;
+            }
+        }
+
+        void electionTimeoutElapsed(object sender, ElapsedEventArgs e)
         {
             if (!TryGettingConsensus())
             {

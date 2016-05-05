@@ -41,6 +41,12 @@ namespace NLeaderElection
             CurrentStateData = new NodeDataState();
         }
 
+        public void DetachEventListeners()
+        {
+            if (HeartBeatTimeout != null)
+                HeartBeatTimeout.Elapsed -= HeartBeatTimeoutElapsed;
+        }
+
         public void StartNetworkBootstrap()
         {
             NetworkDiscoveryTimeout = new Timer(8000);
@@ -71,17 +77,10 @@ namespace NLeaderElection
             Logger.Log(string.Format("Heartbeat timeout started."));
         }
 
-        private void HeartBeatTimeout_Reset()
+        private void HeartBeatTimeoutReset()
         {
             HeartBeatTimeout.Stop();
             HeartBeatTimeout.Start();
-        }
-
-        private void ElectionTimeout_Reset()
-        {
-            NetworkDiscoveryTimeout.Stop();
-            NetworkDiscoveryTimeout.Start();
-            Logger.Log(string.Format("{0}'s bootstrap timed out.", this.ToString()));
         }
 
         /// <summary>
@@ -97,7 +96,7 @@ namespace NLeaderElection
         {
             //Restart heartbeat as there is already a candidate. Might sujbect to check the term to verify
             //that this message is not from old candidate
-            HeartBeatTimeout_Reset();
+            HeartBeatTimeoutReset();
             Logger.Log(string.Format("INFO :: Received Request RPC from candidate for term {0} .",requestVote.GetTerm()));
             RequestVoteRPCResponse response;
             
@@ -137,7 +136,7 @@ namespace NLeaderElection
 
             if (IsServingCurrentTerm(term))
             {
-                HeartBeatTimeout_Reset();
+                HeartBeatTimeoutReset();
             }
             else if (IsWorkingOnStaleTerm(term))
             {
@@ -185,8 +184,14 @@ namespace NLeaderElection
         {
             if (disposing)
             {
-                if (NetworkDiscoveryTimeout != null) NetworkDiscoveryTimeout.Dispose();
-                if (HeartBeatTimeout != null) HeartBeatTimeout.Dispose();
+                if (NetworkDiscoveryTimeout != null)
+                {
+                    NetworkDiscoveryTimeout.Dispose();
+                }
+                if (HeartBeatTimeout != null)
+                {
+                    HeartBeatTimeout.Dispose();
+                }
             }
         }
 

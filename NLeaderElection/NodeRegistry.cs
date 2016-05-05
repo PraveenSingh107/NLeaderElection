@@ -55,6 +55,8 @@ namespace NLeaderElection
             candidate.UpdateTerm(follower.CurrentStateData.Term);
             candidate.IncrementTerm();
             this.CurrentNode = candidate;
+            follower.DetachEventListeners();
+            follower.Dispose();
             Logger.Log(string.Format("{0} promoted to Candidate {1} .",follower,candidate));
             candidate.SendRequestVotesToFollowers();
         }
@@ -65,6 +67,8 @@ namespace NLeaderElection
             candidate.IP = candidate.IP;
             candidate.UpdateTerm(candidate.CurrentStateData.Term);
             this.CurrentNode = leader;
+            candidate.DetachEventListerners();
+            candidate.Dispose();
             Logger.Log(string.Format("{0} promoted to Leader {1} .", candidate, leader));
         }
 
@@ -91,6 +95,7 @@ namespace NLeaderElection
             Follower follower = new Follower(candidate.GetNodeId(), candidate.GetIP());
             follower.UpdateTerm(candidate.CurrentStateData.Term);
             this.CurrentNode = follower;
+            candidate.DetachEventListerners();
             candidate.Dispose();
             follower.StartHeartbeatTimouts();
             Logger.Log(string.Format("{0} demoted to Follower {1} .", candidate, follower));
@@ -103,6 +108,7 @@ namespace NLeaderElection
             follower.UpdateTerm(leader.CurrentStateData.Term);
             this.CurrentNode = follower;
             leader.Dispose();
+            leader.DetachEventListerners();
             follower.StartHeartbeatTimouts();
             Logger.Log(string.Format("{0} demoted to Follower {1} .", leader, follower));
         }
