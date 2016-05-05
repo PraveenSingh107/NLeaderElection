@@ -481,6 +481,9 @@ namespace NLeaderElection.Messaging
             {
                 if (candidateConnectDone != null) candidateConnectDone.Dispose();
                 if (candidateSendDone != null) candidateSendDone.Dispose();
+                if (leaderConnectDone != null) leaderConnectDone.Dispose();
+                if (leaderSendDone != null) leaderSendDone.Dispose();
+                if (startupRequestResponseReceiveDone != null) startupRequestResponseReceiveDone.Dispose();
             }
         }
 

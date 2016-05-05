@@ -19,13 +19,13 @@ namespace NLeaderElection
         public Follower() : base(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
         {
             SetupTimeouts();
-            CurrentStateData.Term  = 1;
+            CurrentStateData.Term  = 0;
         }
 
         public Follower(IPAddress address) : base(address,DateTime.Now.ToString("yyyyMMddHHmmssffff"))
         {
             SetupTimeouts();
-            CurrentStateData.Term = 1;
+            CurrentStateData.Term = 0;
         }
 
         public Follower(string nodeId, IPAddress address)
