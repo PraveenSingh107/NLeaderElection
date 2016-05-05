@@ -23,7 +23,7 @@ namespace NLeaderElection
 
         public static void Log(string msg)
         {
-            Console.WriteLine(String.Format("{0} : {1}",Thread.CurrentThread.Name, msg));
+            Console.WriteLine(String.Format("{0} : {1}",Thread.CurrentThread.ManagedThreadId, msg));
            // TO DO
         }
     }

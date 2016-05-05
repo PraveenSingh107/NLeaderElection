@@ -61,6 +61,7 @@ namespace NLeaderElection
 
         private void HeartBeatTimeoutElapsed(object sender, ElapsedEventArgs e)
         {
+            DetachEventListeners();
             NodeRegistryCache.GetInstance().PromoteFollowerToCandidate(this);
             HeartBeatTimeout.Stop();
             HeartBeatTimeout.Close();
@@ -72,15 +73,16 @@ namespace NLeaderElection
             NetworkDiscoveryTimeout.Elapsed -= NetworkBootStrapTimeElapsed;
             NetworkDiscoveryTimeout.Close();
             NetworkDiscoveryTimeout = null;
-            Logger.Log(string.Format("Network bootstrap timed out."));
+            Logger.Log(string.Format("INFO :: Network bootstrap timed out."));
             StartHeartbeatTimouts();
-            Logger.Log(string.Format("Heartbeat timeout started."));
+            Logger.Log(string.Format("INFO :: Heartbeat timeout started."));
         }
 
         private void HeartBeatTimeoutReset()
         {
             HeartBeatTimeout.Stop();
             HeartBeatTimeout.Start();
+            Logger.Log("INFO :: Reset heartbeat timeout.");
         }
 
         /// <summary>
@@ -140,10 +142,12 @@ namespace NLeaderElection
             }
             else if (IsWorkingOnStaleTerm(term))
             {
+                Logger.Log("Warning! Node working on older term.");
                 UpdateNodeLogEntries();
             }
             else
             {
+                Logger.Log("Warning! Getting signals from old(term) Leader. Let leader's know to step down.");
                 RequestLeaderToStepDown();
             }
         }

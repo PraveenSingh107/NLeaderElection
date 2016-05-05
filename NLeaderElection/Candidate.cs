@@ -59,6 +59,7 @@ namespace NLeaderElection
             }
             else
             {
+                DetachEventListerners();
                 NodeRegistryCache.GetInstance().PromoteCandidateToLeader(this);
                 electionTimeout.Stop();
                 //Dispose();
@@ -101,6 +102,7 @@ namespace NLeaderElection
         {
             if (electionTimeout != null)
             {
+                Logger.Log("IMP :: Election timed out. Restarting the elections.");
                 electionTimeout.Stop();
                 electionTimeout.Start();
                 totalResponseReceivedForCurrentTerm = 0;
@@ -188,6 +190,7 @@ namespace NLeaderElection
         {
             if (IsServingCurrentTerm(this.CurrentStateData.Term))
             {
+                DetachEventListerners();
                 NodeRegistryCache.GetInstance().DemoteCandidateToFollower();
                 return 0;
             }
