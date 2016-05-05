@@ -136,14 +136,14 @@ namespace NLeaderElection
         {
             Logger.Log(string.Format("INFO :: Received the heartbeat signal from leader for term {0} .", term));
 
-            if (IsServingCurrentTerm(term))
+            if (term.Equals(CurrentStateData.Term))
             {
                 HeartBeatTimeoutReset();
             }
-            else if (IsWorkingOnStaleTerm(term))
+            else if (term > CurrentStateData.Term)
             {
-                Logger.Log("Warning! Node working on older term.");
-                UpdateNodeLogEntries();
+                Logger.Log("WARN ! Follower has an older term. Update the log entries to sync with leader.");
+                HeartBeatTimeoutReset();
             }
             else
             {
