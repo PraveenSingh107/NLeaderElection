@@ -186,15 +186,15 @@ namespace NLeaderElection
             return IP;
         }
 
-        internal int HeartBeatSignalReceivedFromLeader(long p)
+        internal int HeartBeatSignalReceivedFromLeader(long termedPassed)
         {
-            if (IsServingCurrentTerm(this.CurrentStateData.Term))
+            if (IsServingCurrentTerm(termedPassed))
             {
                 DetachEventListerners();
                 NodeRegistryCache.GetInstance().DemoteCandidateToFollower();
                 return 0;
             }
-            else if (IsWorkingOnStaleTerm(this.CurrentStateData.Term))
+            else if (IsWorkingOnStaleTerm(termedPassed))
             {
                 UpdateNodeLogEntries();
                 return 0;
