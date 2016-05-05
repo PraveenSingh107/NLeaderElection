@@ -92,6 +92,7 @@ namespace NLeaderElection
             follower.UpdateTerm(candidate.CurrentStateData.Term);
             this.CurrentNode = follower;
             candidate.Dispose();
+            follower.StartHeartbeatTimouts();
             Logger.Log(string.Format("{0} demoted to Follower {1} .", candidate, follower));
         }
 
@@ -102,6 +103,7 @@ namespace NLeaderElection
             follower.UpdateTerm(leader.CurrentStateData.Term);
             this.CurrentNode = follower;
             leader.Dispose();
+            follower.StartHeartbeatTimouts();
             Logger.Log(string.Format("{0} demoted to Follower {1} .", leader, follower));
         }
     }

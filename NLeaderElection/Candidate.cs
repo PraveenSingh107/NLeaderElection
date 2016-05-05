@@ -26,18 +26,18 @@ namespace NLeaderElection
             Setup();
         }
 
+        public Candidate(string nodeId,IPAddress ipAddress)
+            : base(ipAddress, nodeId)
+        {
+            Setup();
+        }
+
         private void Setup()
         {
             CurrentStateData = new NodeDataState();
             electionTimeout = new Timer(4000);
             electionTimeout.Elapsed += electionTimeout_Elapsed;
             electionTimeout.Start();
-        }
-
-        public Candidate(string nodeId,IPAddress ipAddress)
-            : base(ipAddress, nodeId)
-        {
-            Setup();
         }
 
         void electionTimeout_Elapsed(object sender, ElapsedEventArgs e)

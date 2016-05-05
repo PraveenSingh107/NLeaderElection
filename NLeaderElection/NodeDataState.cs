@@ -14,12 +14,12 @@ namespace NLeaderElection
 
         public NodeDataState()
         {
-            this.Term = -1;
+            this.Term = 0;
         }
 
         internal void SetTerm(long term)
         {
-            throw new NotImplementedException();
+            this.Term = term;
         }
     }
 }
