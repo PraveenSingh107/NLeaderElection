@@ -56,7 +56,7 @@ namespace NLeaderElection
 
         public void SendHeartBeatMessage()
         {
-            Logger.Log("INFO :: Initiating sending heartbeat signals.");
+            Logger.Log("INFO (L) :: Initiating sending heartbeat signals.");
             var dummyFollowers = NodeRegistryCache.GetInstance().Get();
                 foreach (var follower in dummyFollowers)
                 {
@@ -70,7 +70,7 @@ namespace NLeaderElection
                     }
                 }
             if (dummyFollowers == null || dummyFollowers.Count == 0)
-                Logger.Log("INFO :: No followers registered to the cluster Or Leader is not aware of any follower.");
+                Logger.Log("INFO (L) :: No followers registered to the cluster Or Leader is not aware of any follower.");
         }
 
         public void Dispose()
@@ -99,7 +99,7 @@ namespace NLeaderElection
 
         internal void HeartBeatSignalReceivedFromLeader(long p)
         {
-            Logger.Log(string.Format("INFO :: Received heartbeat message from leader."));
+            Logger.Log(string.Format("INFO (L) :: HB SIGNAL (REC) from leader."));
             DetachEventListerners();
             NodeRegistryCache.GetInstance().DemoteLeaderToFollower();
         }

@@ -102,7 +102,7 @@ namespace NLeaderElection
         {
             if (electionTimeout != null)
             {
-                Logger.Log("IMP :: Election timed out. Restarting the elections.");
+                Logger.Log("INFO (C) :: Election timed out. Restarting the elections.");
                 electionTimeout.Stop();
                 electionTimeout.Start();
                 totalResponseReceivedForCurrentTerm = 0;

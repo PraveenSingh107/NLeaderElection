@@ -99,7 +99,7 @@ namespace NLeaderElection
             //Restart heartbeat as there is already a candidate. Might sujbect to check the term to verify
             //that this message is not from old candidate
             HeartBeatTimeoutReset();
-            Logger.Log(string.Format("INFO :: Received Request RPC from candidate for term {0} .",requestVote.GetTerm()));
+            Logger.Log(string.Format("INFO :: REQUEST VOTE RPC (REC) from candidate for term {0} .",requestVote.GetTerm()));
             RequestVoteRPCResponse response;
             
             if (HasAleadyVoted())
@@ -117,7 +117,7 @@ namespace NLeaderElection
                     response = new RequestVoteRPCResponse(nodeId, RequestVoteResponseType.PositiveVote);
                 }
             }
-            Logger.Log(string.Format("INFO :: Sending response to Request RPC from candidate for term {0} .",requestVote.GetTerm()));
+            Logger.Log(string.Format("INFO :: REQUEST VOTE RPC (RES'ING) from candidate for term {0} .",requestVote.GetTerm()));
             return response;
         }
 
@@ -134,7 +134,7 @@ namespace NLeaderElection
 
         public virtual void HeartBeatSignalReceivedFromLeader(long term)
         {
-            Logger.Log(string.Format("INFO :: Received the heartbeat signal from leader for term {0} .", term));
+            Logger.Log(string.Format("INFO :: HB SIGNAL (REC) from leader for term {0} .", term));
 
             if (term.Equals(CurrentStateData.Term))
             {
@@ -142,12 +142,12 @@ namespace NLeaderElection
             }
             else if (term > CurrentStateData.Term)
             {
-                Logger.Log("WARN ! Follower has an older term. Update the log entries to sync with leader.");
+                Logger.Log("WARN (F)! Follower has an older term [OF]. Update the log entries to sync with leader.");
                 HeartBeatTimeoutReset();
             }
             else
             {
-                Logger.Log("Warning! Getting signals from old(term) Leader. Let leader's know to step down.");
+                Logger.Log("Warning (F)! Getting signals from old(term) Leader [OL]. Let leader's know to step down.");
                 RequestLeaderToStepDown();
             }
         }
@@ -172,7 +172,7 @@ namespace NLeaderElection
             }
             else if(term > CurrentStateData.Term)
             {
-                Logger.Log("WARN ! Follower has an older term. Update the log entries to sync with leader.");
+                Logger.Log("WARN ! Follower has an older term [OF]. Update the log entries to sync with leader.");
                 return true;
             }
             else

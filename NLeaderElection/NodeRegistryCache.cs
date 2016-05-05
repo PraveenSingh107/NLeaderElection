@@ -45,7 +45,7 @@ namespace NLeaderElection
                 if (node.GetNodeId().Equals(nodeId))
                     return node;
             }
-            throw new Exception("Node not registered.");
+            throw new Exception("Warning ! Node not registered.");
         }
     
         public void PromoteFollowerToCandidate(Follower follower)
@@ -56,7 +56,7 @@ namespace NLeaderElection
             candidate.IncrementTerm();
             this.CurrentNode = candidate;
             //follower.Dispose();
-            Logger.Log(string.Format("{0} promoted to Candidate {1} .",follower,candidate));
+            Logger.Log(string.Format("INFO (FTC) :: {0} promoted to Candidate {1} .",follower,candidate));
             candidate.SendRequestVotesToFollowers();
         }
 
@@ -67,7 +67,7 @@ namespace NLeaderElection
             candidate.UpdateTerm(candidate.CurrentStateData.Term);
             this.CurrentNode = leader;
             //candidate.Dispose();
-            Logger.Log(string.Format("{0} promoted to Leader {1} .", candidate, leader));
+            Logger.Log(string.Format("INFO (CTL) :: {0} promoted to Leader {1} .", candidate, leader));
         }
 
         internal void NofifyHeartbeatReceived(string content)
@@ -95,7 +95,7 @@ namespace NLeaderElection
             this.CurrentNode = follower;
             //candidate.Dispose();
             follower.StartHeartbeatTimouts();
-            Logger.Log(string.Format("{0} demoted to Follower {1} .", candidate, follower));
+            Logger.Log(string.Format("INFO (CTF) :: {0} demoted to Follower {1} .", candidate, follower));
         }
 
         internal void DemoteLeaderToFollower()
@@ -106,7 +106,7 @@ namespace NLeaderElection
             this.CurrentNode = follower;
             //leader.Dispose();
             follower.StartHeartbeatTimouts();
-            Logger.Log(string.Format("{0} demoted to Follower {1} .", leader, follower));
+            Logger.Log(string.Format("INFO (LTF) :: {0} demoted to Follower {1} .", leader, follower));
         }
     }
 }
