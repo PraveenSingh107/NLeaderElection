@@ -69,7 +69,6 @@ namespace NLeaderElection
                         Logger.Log(exp);
                     }
                 }
-            
             if (dummyFollowers == null || dummyFollowers.Count == 0)
                 Logger.Log("INFO :: No followers registered to the cluster Or Leader is not aware of any follower.");
         }
