@@ -166,7 +166,18 @@ namespace NLeaderElection
 
         private bool IsServingCurrentTerm(long term)
         {
-            return term.Equals(CurrentStateData.Term);
+            if (term.Equals(CurrentStateData.Term))
+            {
+                return true;
+            }
+            else if(term > CurrentStateData.Term)
+            {
+                Logger.Log("WARN ! Follower has an older term. Update the log entries to sync with leader.");
+                return true;
+            }
+            else
+                return false;
+
         }
 
         private bool IsWorkingOnStaleTerm(long term)
