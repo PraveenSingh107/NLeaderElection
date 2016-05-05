@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace NLeaderElection
 {
@@ -22,7 +23,7 @@ namespace NLeaderElection
 
         public static void Log(string msg)
         {
-            Console.WriteLine(msg);
+            Console.WriteLine(String.Format("{0} : {1}",Thread.CurrentThread.Name, msg));
            // TO DO
         }
     }
