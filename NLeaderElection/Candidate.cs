@@ -35,7 +35,7 @@ namespace NLeaderElection
         private void Setup()
         {
             CurrentStateData = new NodeDataState();
-            electionTimeout = new Timer(4000);
+            electionTimeout = new Timer(3000);
             electionTimeout.Elapsed += electionTimeoutElapsed;
             electionTimeout.Start();
         }

@@ -13,6 +13,7 @@ namespace NLeaderElection
     {
         public NodeDataState CurrentStateData { get; set; }
         public List<Follower> Followers { get; private set; }
+        private object lockSender = new Object();
         private Timer heartBeatTimeout;
 
         public Leader() : this(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
@@ -22,7 +23,7 @@ namespace NLeaderElection
             : base(nodeId)
         {
             Followers = new List<Follower>();
-            heartBeatTimeout = new Timer(200);
+            heartBeatTimeout = new Timer(1000);
             heartBeatTimeout.Elapsed += HeartBeatTimeoutElapsed;
             heartBeatTimeout.Start();
             CurrentStateData = new NodeDataState();
@@ -32,7 +33,7 @@ namespace NLeaderElection
             : base(ip, nodeId)
         {
             Followers = new List<Follower>();
-            heartBeatTimeout = new Timer(200);
+            heartBeatTimeout = new Timer(1000);
             heartBeatTimeout.Elapsed += HeartBeatTimeoutElapsed;
             heartBeatTimeout.Start();
             CurrentStateData = new NodeDataState();
@@ -56,15 +57,18 @@ namespace NLeaderElection
         {
             Logger.Log("INFO :: Initiating sending heartbeat signals.");
             var dummyFollowers = NodeRegistryCache.GetInstance().Get();
-            foreach (var follower in dummyFollowers)
+            lock (lockSender)
             {
-                try
+                foreach (var follower in dummyFollowers)
                 {
-                    MessageBroker.GetInstance().LeaderSendHeartbeatAsync(follower,this.CurrentStateData.Term);
-                }
-                catch (Exception exp)
-                {
-                    Logger.Log(exp);
+                    try
+                    {
+                        MessageBroker.GetInstance().LeaderSendHeartbeatAsync(follower, this.CurrentStateData.Term);
+                    }
+                    catch (Exception exp)
+                    {
+                        Logger.Log(exp);
+                    }
                 }
             }
             if (dummyFollowers == null || dummyFollowers.Count == 0)

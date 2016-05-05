@@ -67,20 +67,35 @@ namespace NLeaderElection.Messaging
                 senderSocket.Close();
 
             }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
             catch (Exception e)
             {
-                Logger.Log(e.ToString());
+                Logger.Log(e.Message);
             }
         }
 
         private void SendHeartbeatSignal(Socket client, String data)
         {
-            // Convert the string data to byte data using ASCII encoding.
-            byte[] byteData = Encoding.ASCII.GetBytes(data);
+            try
+            {
+                // Convert the string data to byte data using ASCII encoding.
+                byte[] byteData = Encoding.ASCII.GetBytes(data);
 
-            // Begin sending the data to the remote device.
-            client.BeginSend(byteData, 0, byteData.Length, 0,
-                new AsyncCallback(HeartbeatSendCallback), client);
+                // Begin sending the data to the remote device.
+                client.BeginSend(byteData, 0, byteData.Length, 0,
+                    new AsyncCallback(HeartbeatSendCallback), client);
+            }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
+            catch (Exception e)
+            {
+                Logger.Log(e.Message);
+            }
         }
 
         private void HeartbeatSendCallback(IAsyncResult ar)
@@ -96,9 +111,13 @@ namespace NLeaderElection.Messaging
                 // Signal that all bytes have been sent.
                 leaderSendDone.Set();
             }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Logger.Log(e.Message);
             }
         }
 
@@ -158,20 +177,35 @@ namespace NLeaderElection.Messaging
                 candidate.Close();
 
             }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
             catch (Exception e)
             {
-                Logger.Log(e.ToString());
+                Logger.Log(e.Message);
             }
         }
 
         private void Send(Socket client, String data)
         {
-            // Convert the string data to byte data using ASCII encoding.
-            byte[] byteData = Encoding.ASCII.GetBytes(data);
+            try
+            {
+                // Convert the string data to byte data using ASCII encoding.
+                byte[] byteData = Encoding.ASCII.GetBytes(data);
 
-            // Begin sending the data to the remote device.
-            client.BeginSend(byteData, 0, byteData.Length, 0,
-                new AsyncCallback(SendCallback), client);
+                // Begin sending the data to the remote device.
+                client.BeginSend(byteData, 0, byteData.Length, 0,
+                    new AsyncCallback(SendCallback), client);
+            }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
+            catch (Exception e)
+            {
+                Logger.Log(e.Message);
+            }
         }
 
         private void SendCallback(IAsyncResult ar)
@@ -188,9 +222,13 @@ namespace NLeaderElection.Messaging
                 // Signal that all bytes have been sent.
                 candidateSendDone.Set();
             }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Logger.Log(e.Message);
             }
         }
 
@@ -209,60 +247,19 @@ namespace NLeaderElection.Messaging
                 // Signal that the connection has been made.
                 candidateConnectDone.Set();
             }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Logger.Log(e.Message);
             }
         }
 
         # endregion
 
         # region Follower Send Methods
-        
-        internal  void UpdateCandidateWithRequestVoteResposeAsync()
-        {
-            // update the respective candidate with response.
-        }
-
-        //internal  void FollowerSendRequestVoteResponseAsync(string nodeId,long term)
-        //{
-        //    Follower follower = (NodeRegistry.GetInstance().Get(nodeId) as Follower);
-        //    if (follower != null)
-        //    {
-        //        RequestVoteRPCMessage requestVoteRPCMessage = new RequestVoteRPCMessage(term);
-        //        var response = follower.RespondToRequestVoteFromCandidate(requestVoteRPCMessage);
-        //        // open a tcp connection to candidate node to response back.
-        //        try
-        //        {
-        //            IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
-        //            IPAddress ipAddress = ipHostInfo.AddressList[0];
-        //            IPEndPoint remoteEP = new IPEndPoint(ipAddress, FOLLOWER_PORT_NUMBER);
-
-        //            // Create a TCP/IP socket.
-        //            Socket candidate = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-        //            // Connect to the remote endpoint.
-        //            candidate.BeginConnect(remoteEP, new AsyncCallback(ConnectCallback), candidate);
-        //            candidateConnectDone.WaitOne();
-
-        //            // Send test data to the remote device.
-        //            Send(candidate, nodeId +"##" + term + "##<EOF>");
-        //            candidaetSendDone.WaitOne();
-
-        //            // Write the response to the console.
-        //            Logger.Log(string.Format("Response received : {0}", response));
-
-        //            // Release the socket.
-        //            candidate.Shutdown(SocketShutdown.Both);
-        //            candidate.Close();
-
-        //        }
-        //        catch (Exception e)
-        //        {
-        //            Logger.Log(e.ToString());
-        //        }
-        //    }
-        //}
 
         public string FollowerProcessIncomingDataFromCandidate(string content)
         {
@@ -288,12 +285,23 @@ namespace NLeaderElection.Messaging
 
         public void FollowerSendRequestRPCResponse(Socket handler, String data)
         {
-            // Convert the string data to byte data using ASCII encoding.
-            byte[] byteData = Encoding.ASCII.GetBytes(data);
+            try
+            {
+                // Convert the string data to byte data using ASCII encoding.
+                byte[] byteData = Encoding.ASCII.GetBytes(data);
 
-            // Begin sending the data to the remote device.
-            handler.BeginSend(byteData, 0, byteData.Length, 0,
-                new AsyncCallback(FollowerSendToCandidateCallback), handler);
+                // Begin sending the data to the remote device.
+                handler.BeginSend(byteData, 0, byteData.Length, 0,
+                    new AsyncCallback(FollowerSendToCandidateCallback), handler);
+            }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
+            catch (Exception e)
+            {
+                Logger.Log(e.Message);
+            }
         }
 
         private  void FollowerSendToCandidateCallback(IAsyncResult ar)
@@ -311,9 +319,13 @@ namespace NLeaderElection.Messaging
                 handler.Close();
 
             }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Logger.Log(e.Message);
             }
         }
        
@@ -354,9 +366,13 @@ namespace NLeaderElection.Messaging
                 candidate.Close();
 
             }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
             catch (Exception e)
             {
-                Logger.Log(e.ToString());
+                Logger.Log(e.Message);
             }
         }
 
@@ -381,9 +397,13 @@ namespace NLeaderElection.Messaging
                 client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                     new AsyncCallback(ReceiveStartupResposeAsyncCallback), state);
             }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Logger.Log(e.Message);
             }
         }
 
@@ -429,20 +449,35 @@ namespace NLeaderElection.Messaging
                     startupRequestResponseReceiveDone.Set();
                 }
             }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Logger.Log(e.Message);
             }
         }
 
         private void SendStartupNotification(Socket client, String data)
         {
-            // Convert the string data to byte data using ASCII encoding.
-            byte[] byteData = Encoding.ASCII.GetBytes(data);
+            try
+            {
+                // Convert the string data to byte data using ASCII encoding.
+                byte[] byteData = Encoding.ASCII.GetBytes(data);
 
-            // Begin sending the data to the remote device.
-            client.BeginSend(byteData, 0, byteData.Length, 0,
-                new AsyncCallback(SendStartupNotificationCallback), client);
+                // Begin sending the data to the remote device.
+                client.BeginSend(byteData, 0, byteData.Length, 0,
+                    new AsyncCallback(SendStartupNotificationCallback), client);
+            }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
+            catch (Exception e)
+            {
+                Logger.Log(e.Message);
+            }
         }
 
         private void SendStartupNotificationCallback(IAsyncResult ar)
@@ -459,9 +494,13 @@ namespace NLeaderElection.Messaging
                 // Signal that all bytes have been sent.
                 candidateSendDone.Set();
             }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Logger.Log(e.Message);
             }
         }
        
