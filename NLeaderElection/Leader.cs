@@ -62,8 +62,6 @@ namespace NLeaderElection
                 {
                     try
                     {
-                        heartBeatTimeout.Elapsed -= HeartBeatTimeoutElapsed;
-                        heartBeatTimeout = null;
                         MessageBroker.GetInstance().LeaderSendHeartbeatAsync(follower, this.CurrentStateData.Term);
                     }
                     catch (Exception exp)
