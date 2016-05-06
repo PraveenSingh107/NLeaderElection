@@ -62,6 +62,7 @@ namespace NLeaderElection
         private void HeartBeatTimeoutElapsed(object sender, ElapsedEventArgs e)
         {
             DetachEventListeners();
+            Logger.Log("INFO (F):: Follower's HB timed out. PROMOTION TIME.");
             NodeRegistryCache.GetInstance().PromoteFollowerToCandidate(this);
             HeartBeatTimeout.Stop();
             HeartBeatTimeout.Close();
