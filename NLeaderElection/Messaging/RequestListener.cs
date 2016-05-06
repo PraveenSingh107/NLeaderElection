@@ -57,9 +57,10 @@ namespace NLeaderElection.Messaging
                     heartbeatAsyncHandler.WaitOne();
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
-                throw;
+                Logger.Log(exp.Message);
+                heartBeatPortSwitch.Set();
             }
         }
 
@@ -137,9 +138,10 @@ namespace NLeaderElection.Messaging
                     candidateAsyncHandler.WaitOne();
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
-                throw;
+                Logger.Log(exp.Message);
+                candidatePortSwitch.Set();
             }
         }
 
@@ -267,9 +269,10 @@ namespace NLeaderElection.Messaging
                     startupAsyncHandler.WaitOne();
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
-                throw;
+                Logger.Log(exp.Message);
+                followerPortSwitch.Set();
             }
         }
 

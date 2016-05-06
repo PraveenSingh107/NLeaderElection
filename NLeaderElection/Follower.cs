@@ -224,7 +224,15 @@ namespace NLeaderElection
 
             foreach (var node in nodes)
             {
-                MessageBroker.GetInstance().SendNodeStartupNotification(node); 
+                try
+                {
+                    MessageBroker.GetInstance().SendNodeStartupNotification(node); 
+                }
+                catch (Exception exp)
+                {
+                    Logger.Log("Exp");
+                }
+                
             }
         }
 

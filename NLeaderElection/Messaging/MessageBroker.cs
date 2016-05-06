@@ -23,10 +23,15 @@ namespace NLeaderElection.Messaging
         private readonly static Int32 HEARTBEAT_PORT_NUMBER = 11004;
         private string response = string.Empty;
         private ManualResetEvent candidateConnectDone = new ManualResetEvent(false);
+        private bool isCandidateConnectDone = false;
         private ManualResetEvent candidateSendDone = new ManualResetEvent(false);
+        private bool isCandidateSendDone = false;
         private ManualResetEvent leaderConnectDone = new ManualResetEvent(false);
+        private bool isLeaderConnectDone = false;
         private ManualResetEvent leaderSendDone = new ManualResetEvent(false);
+        private bool isLeaderSendDone = false;
         private ManualResetEvent startupRequestResponseReceiveDone = new ManualResetEvent(false);
+        private bool isStartupRequestResponseReceiveDone = false;
 
         #endregion Properties
 
@@ -56,12 +61,17 @@ namespace NLeaderElection.Messaging
                 senderSocket.BeginConnect(remoteEP, new AsyncCallback(HeartbeatConnectCallback), senderSocket);
                 leaderConnectDone.WaitOne();
 
-                // Send test data to the remote device.
-                SendHeartbeatSignal(senderSocket, term + "##<EOF>");
-                leaderSendDone.WaitOne();
-
-                // Write the response to the console.
-                Logger.Log(string.Format("INFO :: Sent heartbeat signal to {0} .", node.ToString()));
+                if (isLeaderConnectDone)
+                {
+                    // Send test data to the remote device.
+                    SendHeartbeatSignal(senderSocket, term + "##<EOF>");
+                    leaderSendDone.WaitOne();
+                    if (isLeaderSendDone)
+                    {
+                        // Write the response to the console.
+                        Logger.Log(string.Format("INFO :: Sent heartbeat signal to {0} .", node.ToString()));
+                    }
+                }
             }
             catch (SocketException scExp)
             {
@@ -73,9 +83,14 @@ namespace NLeaderElection.Messaging
             }
             finally
             {
-                if (senderSocket != null)
+                // Release the socket.
+                if (senderSocket != null && senderSocket.Connected)
                 {
                     senderSocket.Shutdown(SocketShutdown.Both);
+                    senderSocket.Close();
+                }
+                else if (senderSocket != null)
+                {
                     senderSocket.Close();
                 }
             }
@@ -91,14 +106,21 @@ namespace NLeaderElection.Messaging
                 // Begin sending the data to the remote device.
                 client.BeginSend(byteData, 0, byteData.Length, 0,
                     new AsyncCallback(HeartbeatSendCallback), client);
+                 
             }
             catch (SocketException scExp)
             {
+                isLeaderConnectDone = false;
                 Logger.Log(scExp.Message);
+                leaderSendDone.Set();
+                throw;
             }
             catch (Exception e)
             {
+                isLeaderConnectDone = false;
                 Logger.Log(e.Message);
+                leaderSendDone.Set();
+                throw;
             }
         }
 
@@ -111,17 +133,23 @@ namespace NLeaderElection.Messaging
 
                 // Complete sending the data to the remote device.
                 int bytesSent = client.EndSend(ar);
-
-                // Signal that all bytes have been sent.
-                leaderSendDone.Set();
+                isLeaderSendDone = true;
             }
             catch (SocketException scExp)
             {
+                isLeaderSendDone = false;
                 Logger.Log(scExp.Message);
+                throw;
             }
             catch (Exception e)
             {
+                isLeaderSendDone = false;
                 Logger.Log(e.Message);
+                throw;
+            }
+            finally
+            {
+                leaderSendDone.Set();
             }
         }
 
@@ -134,20 +162,24 @@ namespace NLeaderElection.Messaging
 
                 // Complete the connection.
                 client.EndConnect(ar);
-
-                // Signal that the connection has been made.
-                leaderConnectDone.Set();
+                isLeaderConnectDone = true;
             }
-            catch (SocketException socketExp)
+            catch (System.Net.Sockets.SocketException socketExp)
             {
+                isLeaderConnectDone = false;
                 Logger.Log(socketExp.Message);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                isLeaderConnectDone = false;
+                Logger.Log(e.Message);
+            }
+            finally
+            {
+                // Signal that the connection has been made.
+                leaderConnectDone.Set();
             }
         }
-
 
         #endregion Leader Send Methods
 
@@ -208,13 +240,20 @@ namespace NLeaderElection.Messaging
                 client.BeginSend(byteData, 0, byteData.Length, 0,
                     new AsyncCallback(SendCallback), client);
             }
-            catch (SocketException scExp)
+            catch (SocketException)
             {
-                Logger.Log(scExp.Message);
+                //Logger.Log(scExp.Message);
+                throw;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Logger.Log(e.Message);
+                //Logger.Log(e.Message);
+                throw;
+            }
+            finally
+            {
+                // Signal that all bytes have been sent.
+                candidateSendDone.Set();
             }
         }
 
@@ -235,10 +274,17 @@ namespace NLeaderElection.Messaging
             catch (SocketException scExp)
             {
                 Logger.Log(scExp.Message);
+                throw;
             }
             catch (Exception e)
             {
                 Logger.Log(e.Message);
+                throw;
+            }
+            finally
+            {
+                // Signal that all bytes have been sent.
+                candidateSendDone.Set();
             }
         }
 
@@ -254,8 +300,6 @@ namespace NLeaderElection.Messaging
 
                 Console.WriteLine("Socket connected to {0}", client.RemoteEndPoint.ToString());
 
-                // Signal that the connection has been made.
-                candidateConnectDone.Set();
             }
             catch (SocketException scExp)
             {
@@ -264,6 +308,11 @@ namespace NLeaderElection.Messaging
             catch (Exception e)
             {
                 Logger.Log(e.Message);
+            }
+            finally
+            {
+                // Signal that the connection has been made.
+                candidateConnectDone.Set();
             }
         }
 
@@ -384,9 +433,15 @@ namespace NLeaderElection.Messaging
             finally
             {
                 // Release the socket.
-                candidateSocket.Shutdown(SocketShutdown.Both);
-                candidateSocket.Close();
-
+                if (candidateSocket != null && candidateSocket.Connected)
+                {
+                    candidateSocket.Shutdown(SocketShutdown.Both);
+                    candidateSocket.Close();
+                }
+                else if (candidateSocket != null)
+                {
+                    candidateSocket.Close();
+                }
             }
         }
 
@@ -414,10 +469,16 @@ namespace NLeaderElection.Messaging
             catch (SocketException scExp)
             {
                 Logger.Log(scExp.Message);
+                throw;
             }
             catch (Exception e)
             {
                 Logger.Log(e.Message);
+                throw;
+            }
+            finally
+            {
+                startupRequestResponseReceiveDone.Set();
             }
         }
 
@@ -456,20 +517,25 @@ namespace NLeaderElection.Messaging
                         long defaultTerm = NodeRegistryCache.GetInstance().CurrentNode.GetTerm();
                         long termSentOverWire = Convert.ToInt64(responseEntries[1]);
                         NodeRegistryCache.GetInstance().CurrentNode.UpdateTerm(termSentOverWire > defaultTerm ? termSentOverWire : defaultTerm);
-
                     }
                     Logger.Log(string.Format("StartUp request's response from Follower: {0}, Response: {1}.", responseEntries[0],
                             responseEntries[1]));
-                    startupRequestResponseReceiveDone.Set();
+
                 }
             }
             catch (SocketException scExp)
             {
                 Logger.Log(scExp.Message);
+                throw;
             }
             catch (Exception e)
             {
                 Logger.Log(e.Message);
+                throw;
+            }
+            finally
+            {
+                startupRequestResponseReceiveDone.Set();
             }
         }
 
@@ -487,10 +553,17 @@ namespace NLeaderElection.Messaging
             catch (SocketException scExp)
             {
                 Logger.Log(scExp.Message);
+                throw;
             }
             catch (Exception e)
             {
                 Logger.Log(e.Message);
+                throw;
+            }
+            finally
+            {
+                // Signal that all bytes have been sent.
+                candidateSendDone.Set();
             }
         }
 
@@ -505,16 +578,21 @@ namespace NLeaderElection.Messaging
                 int bytesSent = client.EndSend(ar);
                 Console.WriteLine("Sent new node notification to other nodes.", bytesSent);
 
-                // Signal that all bytes have been sent.
-                candidateSendDone.Set();
             }
             catch (SocketException scExp)
             {
                 Logger.Log(scExp.Message);
+                throw;
             }
             catch (Exception e)
             {
                 Logger.Log(e.Message);
+                throw;
+            }
+            finally
+            {
+                // Signal that all bytes have been sent.
+                candidateSendDone.Set();
             }
         }
 
