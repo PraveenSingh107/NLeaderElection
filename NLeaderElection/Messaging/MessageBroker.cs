@@ -225,9 +225,13 @@ namespace NLeaderElection.Messaging
             finally
             {
                 // Release the socket.
-                if(candidateSocket != null)
+                if(candidateSocket != null && candidateSocket.Connected)
                 {
                     candidateSocket.Shutdown(SocketShutdown.Both);
+                    candidateSocket.Close();
+                }
+                else if (candidateSocket != null)
+                {
                     candidateSocket.Close();
                 }
             }
@@ -362,9 +366,13 @@ namespace NLeaderElection.Messaging
             finally
             {
                 // Release the socket.
-                if (followerRVResponseSendingSocket != null)
+                if (followerRVResponseSendingSocket != null && followerRVResponseSendingSocket.Connected)
                 {
                     followerRVResponseSendingSocket.Shutdown(SocketShutdown.Both);
+                    followerRVResponseSendingSocket.Close();
+                }
+                else if (followerRVResponseSendingSocket != null)
+                {
                     followerRVResponseSendingSocket.Close();
                 }
             }
