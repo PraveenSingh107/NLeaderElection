@@ -113,14 +113,12 @@ namespace NLeaderElection.Messaging
                 isLeaderConnectDone = false;
                 Logger.Log(scExp.Message);
                 leaderSendDone.Set();
-                throw;
             }
             catch (Exception e)
             {
                 isLeaderConnectDone = false;
                 Logger.Log(e.Message);
                 leaderSendDone.Set();
-                throw;
             }
         }
 
@@ -139,13 +137,11 @@ namespace NLeaderElection.Messaging
             {
                 isLeaderSendDone = false;
                 Logger.Log(scExp.Message);
-                throw;
             }
             catch (Exception e)
             {
                 isLeaderSendDone = false;
                 Logger.Log(e.Message);
-                throw;
             }
             finally
             {
@@ -240,19 +236,16 @@ namespace NLeaderElection.Messaging
                 client.BeginSend(byteData, 0, byteData.Length, 0,
                     new AsyncCallback(SendCallback), client);
             }
-            catch (SocketException)
+            catch (SocketException scExp)
             {
-                //Logger.Log(scExp.Message);
-                throw;
+                isCandidateSendDone = false;
+                Logger.Log(scExp.Message);
+                candidateSendDone.Set();
             }
-            catch (Exception)
+            catch (Exception exp)
             {
-                //Logger.Log(e.Message);
-                throw;
-            }
-            finally
-            {
-                // Signal that all bytes have been sent.
+                isCandidateSendDone = false;
+                Logger.Log(exp.Message);
                 candidateSendDone.Set();
             }
         }
@@ -269,17 +262,17 @@ namespace NLeaderElection.Messaging
                 Console.WriteLine("Sent request vote RPC.", bytesSent);
 
                 // Signal that all bytes have been sent.
-                candidateSendDone.Set();
+                isCandidateSendDone = true;
             }
             catch (SocketException scExp)
             {
                 Logger.Log(scExp.Message);
-                throw;
+                isCandidateSendDone = false;
             }
             catch (Exception e)
             {
                 Logger.Log(e.Message);
-                throw;
+                isCandidateSendDone = false;
             }
             finally
             {
@@ -299,14 +292,16 @@ namespace NLeaderElection.Messaging
                 client.EndConnect(ar);
 
                 Console.WriteLine("Socket connected to {0}", client.RemoteEndPoint.ToString());
-
+                isCandidateConnectDone = true;
             }
             catch (SocketException scExp)
             {
+                isCandidateConnectDone = false;
                 Logger.Log(scExp.Message);
             }
             catch (Exception e)
             {
+                isCandidateConnectDone = false;
                 Logger.Log(e.Message);
             }
             finally
@@ -361,6 +356,7 @@ namespace NLeaderElection.Messaging
             {
                 Logger.Log(e.Message);
             }
+
         }
 
         private void FollowerSendToCandidateCallback(IAsyncResult ar)
@@ -387,7 +383,7 @@ namespace NLeaderElection.Messaging
                 Logger.Log(e.Message);
             }
         }
-
+        
         # endregion
 
         #region Node Startup Methods
@@ -408,18 +404,27 @@ namespace NLeaderElection.Messaging
                 candidateSocket.BeginConnect(remoteEP, new AsyncCallback(ConnectCallback), candidateSocket);
                 candidateConnectDone.WaitOne();
 
-                // Send test data to the remote device.
-                string startUpMsg = NodeRegistryCache.GetInstance().IP.ToString() + "##<EOF>";
-                SendStartupNotification(candidateSocket, startUpMsg);
-                candidateSendDone.WaitOne();
+                if (isCandidateConnectDone)
+                {
+                    // Send test data to the remote device.
+                    string startUpMsg = NodeRegistryCache.GetInstance().IP.ToString() + "##<EOF>";
+                    SendStartupNotification(candidateSocket, startUpMsg);
+                    candidateSendDone.WaitOne();
 
-                // Receive the response from the remote device.
-                ReceiveStartupResposeAsync(candidateSocket);
-                startupRequestResponseReceiveDone.WaitOne();
-                // Write the response to the console.
-                // After letting the cluster know that a new node has been added. We can start the heartbeat timeout on the follower node.
-                StartFollowersHeartBeatTimeout();
-                Logger.Log(string.Format("Response received : {0}", response));
+                    if (isCandidateSendDone)
+                    {
+                        // Receive the response from the remote device.
+                        ReceiveStartupResposeAsync(candidateSocket);
+                        startupRequestResponseReceiveDone.WaitOne();
+                        // Write the response to the console.
+                        // After letting the cluster know that a new node has been added. We can start the heartbeat timeout on the follower node.
+                        if (isStartupRequestResponseReceiveDone)
+                        {
+                            StartFollowersHeartBeatTimeout();
+                            Logger.Log(string.Format("Response received : {0}", response));
+                        }
+                    }
+                }
 
             }
             catch (SocketException scExp)
@@ -469,15 +474,13 @@ namespace NLeaderElection.Messaging
             catch (SocketException scExp)
             {
                 Logger.Log(scExp.Message);
-                throw;
+                isStartupRequestResponseReceiveDone = false;
+                startupRequestResponseReceiveDone.Set();
             }
             catch (Exception e)
             {
                 Logger.Log(e.Message);
-                throw;
-            }
-            finally
-            {
+                isStartupRequestResponseReceiveDone = false;
                 startupRequestResponseReceiveDone.Set();
             }
         }
@@ -520,18 +523,18 @@ namespace NLeaderElection.Messaging
                     }
                     Logger.Log(string.Format("StartUp request's response from Follower: {0}, Response: {1}.", responseEntries[0],
                             responseEntries[1]));
-
+                    isStartupRequestResponseReceiveDone = true;
                 }
             }
             catch (SocketException scExp)
             {
                 Logger.Log(scExp.Message);
-                throw;
+                isStartupRequestResponseReceiveDone = false;
             }
             catch (Exception e)
             {
                 Logger.Log(e.Message);
-                throw;
+                isStartupRequestResponseReceiveDone = false;
             }
             finally
             {
@@ -553,16 +556,13 @@ namespace NLeaderElection.Messaging
             catch (SocketException scExp)
             {
                 Logger.Log(scExp.Message);
-                throw;
+                isCandidateSendDone = false;
+                candidateSendDone.Set();
             }
             catch (Exception e)
             {
                 Logger.Log(e.Message);
-                throw;
-            }
-            finally
-            {
-                // Signal that all bytes have been sent.
+                isCandidateSendDone = false;
                 candidateSendDone.Set();
             }
         }
@@ -577,17 +577,17 @@ namespace NLeaderElection.Messaging
                 // Complete sending the data to the remote device.
                 int bytesSent = client.EndSend(ar);
                 Console.WriteLine("Sent new node notification to other nodes.", bytesSent);
-
+                isCandidateSendDone = true;
             }
             catch (SocketException scExp)
             {
                 Logger.Log(scExp.Message);
-                throw;
+                isCandidateSendDone = false;
             }
             catch (Exception e)
             {
                 Logger.Log(e.Message);
-                throw;
+                isCandidateSendDone = false;
             }
             finally
             {
