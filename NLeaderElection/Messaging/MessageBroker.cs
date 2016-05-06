@@ -17,19 +17,27 @@ namespace NLeaderElection.Messaging
     {
 
         #region Properties
-
+        private readonly static Int32 FOLLOWER_PORT_NUMBER = 11000;
         private readonly static Int32 CANDIDATE_PORT_NUMBER = 11001;
         private readonly static Int32 STARTUP_PORT_NUMBER = 11002;
         private readonly static Int32 HEARTBEAT_PORT_NUMBER = 11004;
         private string response = string.Empty;
+
+        private ManualResetEvent followerRVResponseConnectDone = new ManualResetEvent(false);
+        private bool isFollowerRVResponseConnectDone = false;
+        private ManualResetEvent followerRVResponseSendDone = new ManualResetEvent(false);
+        private bool isFollowerRVResponseSendDone = false;
+
         private ManualResetEvent candidateConnectDone = new ManualResetEvent(false);
         private bool isCandidateConnectDone = false;
         private ManualResetEvent candidateSendDone = new ManualResetEvent(false);
         private bool isCandidateSendDone = false;
+        
         private ManualResetEvent leaderConnectDone = new ManualResetEvent(false);
         private bool isLeaderConnectDone = false;
         private ManualResetEvent leaderSendDone = new ManualResetEvent(false);
         private bool isLeaderSendDone = false;
+        
         private ManualResetEvent startupRequestResponseReceiveDone = new ManualResetEvent(false);
         private bool isStartupRequestResponseReceiveDone = false;
 
@@ -189,7 +197,7 @@ namespace NLeaderElection.Messaging
             {
                 Logger.Log(string.Format("Sending Request Vote RPC to {0} .", node.ToString()));
                 IPAddress ipAddress = node.IP;
-                IPEndPoint remoteEP = new IPEndPoint(ipAddress, CANDIDATE_PORT_NUMBER);
+                IPEndPoint remoteEP = new IPEndPoint(ipAddress, FOLLOWER_PORT_NUMBER);
 
                 // Create a TCP/IP socket.
                 candidateSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -315,6 +323,81 @@ namespace NLeaderElection.Messaging
 
         # region Follower Send Methods
 
+        internal void FollowerSendRVResponseAsync(IPAddress destinationIP, string data)
+        {
+            Socket followerRVResponseSendingSocket = null;
+            // open a tcp connection to the node's socket.
+            try
+            {
+                Logger.Log(string.Format("INFO :: Sending REQUEST VOTE RPC (RES) to Candidate : {0} .", destinationIP));
+                IPEndPoint remoteEP = new IPEndPoint(destinationIP, CANDIDATE_PORT_NUMBER);
+
+                // Create a TCP/IP socket.
+                followerRVResponseSendingSocket = new Socket(destinationIP.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+                // Connect to the remote endpoint.
+                followerRVResponseSendingSocket.BeginConnect(remoteEP, new AsyncCallback(FollowerSendRequestRPCResponseConnectCallback), followerRVResponseSendingSocket);
+                followerRVResponseConnectDone.WaitOne();
+
+                if (isFollowerRVResponseConnectDone)
+                {
+                    // Send test data to the remote device.
+                    FollowerSendRequestRVResponse(followerRVResponseSendingSocket, data);
+                    followerRVResponseSendDone.WaitOne();
+                    if (isFollowerRVResponseSendDone)
+                    {
+                        // Write the response to the console.
+                        Logger.Log(string.Format("INFO :: Sent REQUEST VOTE RPC Response to {0} .", destinationIP.ToString()));
+                    }
+                }
+            }
+            catch (SocketException scExp)
+            {
+                Logger.Log(scExp.Message);
+            }
+            catch (Exception e)
+            {
+                Logger.Log(e.Message);
+            }
+            finally
+            {
+                // Release the socket.
+                if (followerRVResponseSendingSocket != null)
+                {
+                    followerRVResponseSendingSocket.Shutdown(SocketShutdown.Both);
+                    followerRVResponseSendingSocket.Close();
+                }
+            }
+        }
+
+        private void FollowerSendRequestRPCResponseConnectCallback(IAsyncResult ar)
+        {
+            try
+            {
+                // Retrieve the socket from the state object.
+                Socket client = (Socket)ar.AsyncState;
+
+                // Complete the connection.
+                client.EndConnect(ar);
+                isFollowerRVResponseConnectDone = true;
+            }
+            catch (System.Net.Sockets.SocketException socketExp)
+            {
+                isFollowerRVResponseConnectDone = false;
+                Logger.Log(socketExp.Message);
+            }
+            catch (Exception e)
+            {
+                isFollowerRVResponseConnectDone = false;
+                Logger.Log(e.Message);
+            }
+            finally
+            {
+                // Signal that the connection has been made.
+                followerRVResponseConnectDone.Set();
+            }
+        }
+
         public string FollowerProcessIncomingDataFromCandidate(string content)
         {
             var tokens = content.Split(new String[] { "##" }, StringSplitOptions.RemoveEmptyEntries);
@@ -337,7 +420,7 @@ namespace NLeaderElection.Messaging
             }
         }
 
-        public void FollowerSendRequestRPCResponse(Socket handler, String data)
+        private void FollowerSendRequestRVResponse(Socket handler, String data)
         {
             try
             {
@@ -346,41 +429,45 @@ namespace NLeaderElection.Messaging
 
                 // Begin sending the data to the remote device.
                 handler.BeginSend(byteData, 0, byteData.Length, 0,
-                    new AsyncCallback(FollowerSendToCandidateCallback), handler);
+                    new AsyncCallback(FollowerSendToCandidateRVResposeCallback), handler);
             }
             catch (SocketException scExp)
             {
                 Logger.Log(scExp.Message);
+                isFollowerRVResponseSendDone = false;
+                followerRVResponseSendDone.Set();
             }
             catch (Exception e)
             {
                 Logger.Log(e.Message);
+                isFollowerRVResponseSendDone = false;
+                followerRVResponseSendDone.Set();
             }
-
         }
 
-        private void FollowerSendToCandidateCallback(IAsyncResult ar)
+        private void FollowerSendToCandidateRVResposeCallback(IAsyncResult ar)
         {
             try
             {
-                // Retrieve the socket from the state object.
                 Socket handler = (Socket)ar.AsyncState;
-
-                // Complete sending the data to the remote device.
                 int bytesSent = handler.EndSend(ar);
-                Console.WriteLine("Sent Rquest vote RPC response bytes to client.", bytesSent);
-
                 handler.Shutdown(SocketShutdown.Both);
                 handler.Close();
-
+                isFollowerRVResponseSendDone = true;
             }
             catch (SocketException scExp)
             {
                 Logger.Log(scExp.Message);
+                isFollowerRVResponseSendDone = false;
             }
             catch (Exception e)
             {
                 Logger.Log(e.Message);
+                isFollowerRVResponseSendDone = false;
+            }
+            finally
+            {
+                followerRVResponseSendDone.Set();
             }
         }
         
@@ -615,6 +702,8 @@ namespace NLeaderElection.Messaging
                 if (leaderConnectDone != null) leaderConnectDone.Dispose();
                 if (leaderSendDone != null) leaderSendDone.Dispose();
                 if (startupRequestResponseReceiveDone != null) startupRequestResponseReceiveDone.Dispose();
+                if (followerRVResponseConnectDone != null) followerRVResponseConnectDone.Dispose();
+                if (followerRVResponseSendDone != null) followerRVResponseSendDone.Dispose();
             }
         }
 
@@ -624,5 +713,7 @@ namespace NLeaderElection.Messaging
         }
 
         #endregion Disposable
+
+        
     }
 }

@@ -230,7 +230,7 @@ namespace NLeaderElection
                 }
                 catch (Exception exp)
                 {
-                    Logger.Log("Exp");
+                    Logger.Log(exp.Message);
                 }
                 
             }
