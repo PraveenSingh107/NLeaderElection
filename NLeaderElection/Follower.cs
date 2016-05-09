@@ -147,7 +147,7 @@ namespace NLeaderElection
             {
                 Logger.Log("WARN (F)! Follower has an older term [OF]. Updating the log entries to sync with leader.");
                 Logger.Log(string.Format("INFO (F) :: Updated term from {0} to {1}. ", CurrentStateData.Term, term));
-                CurrentStateData.Term = term;
+                UpdateNodeLogEntries(term);
                 HeartBeatTimeoutReset();
             }
             else
@@ -164,9 +164,9 @@ namespace NLeaderElection
         }
 
         // TO DO
-        private void UpdateNodeLogEntries()
+        private void UpdateNodeLogEntries(long term)
         {
-         //   throw new NotImplementedException();
+            this.CurrentStateData.Term = term;
         }
 
         private bool IsServingCurrentTerm(long term)
