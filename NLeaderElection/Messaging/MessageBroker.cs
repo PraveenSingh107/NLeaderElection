@@ -271,8 +271,7 @@ namespace NLeaderElection.Messaging
 
                 // Complete sending the data to the remote device.
                 int bytesSent = client.EndSend(ar);
-                Console.WriteLine("Sent request vote RPC.", bytesSent);
-
+                
                 // Signal that all bytes have been sent.
                 isCandidateSendDone = true;
             }

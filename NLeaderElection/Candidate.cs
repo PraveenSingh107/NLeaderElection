@@ -59,6 +59,7 @@ namespace NLeaderElection
             }
             else
             {
+                Logger.Log("INFO (C) :: Quorum won.");
                 DetachEventListerners();
                 NodeRegistryCache.GetInstance().PromoteCandidateToLeader(this);
                 electionTimeout.Stop();
@@ -163,6 +164,7 @@ namespace NLeaderElection
                 if (responseParts != null && responseParts.Count() >= 2)
                 {
                     RequestVoteRPCResponse response = new RequestVoteRPCResponse(responseParts[0], getRequestRPCResponse(responseParts[1]));
+                    ResponseCallbackFromFollower(response);
                 }
                 else
                 {
