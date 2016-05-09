@@ -85,6 +85,7 @@ namespace NLeaderElection.Client
                     var switchValues = optionSwitch.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (switchValues[0].Equals("Nodes"))
                     {
+                        Logger.Log("INFO :: Discovering the nodes in the cluster.");
                         var nodes = switchValues[1].Replace("'", "").Split(new Char[] { ',' });
                         foreach (var node in nodes)
                         {

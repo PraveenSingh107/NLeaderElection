@@ -291,7 +291,7 @@ namespace NLeaderElection.Messaging
                 // Complete the connection.
                 client.EndConnect(ar);
 
-                Console.WriteLine("Socket connected to {0}", client.RemoteEndPoint.ToString());
+                Console.WriteLine("INFO :: Socket connected to {0}", client.RemoteEndPoint.ToString());
                 isCandidateConnectDone = true;
             }
             catch (SocketException scExp)
@@ -394,6 +394,7 @@ namespace NLeaderElection.Messaging
             // open a tcp connection to the node's socket.
             try
             {
+                Logger.Log(string.Format("INFO :: Sending the startup notification to {0}",node.IP.ToString()));
                 IPAddress ipAddress = node.IP;
                 IPEndPoint remoteEP = new IPEndPoint(ipAddress, STARTUP_PORT_NUMBER);
 
@@ -421,7 +422,7 @@ namespace NLeaderElection.Messaging
                         if (isStartupRequestResponseReceiveDone)
                         {
                             StartFollowersHeartBeatTimeout();
-                            Logger.Log(string.Format("Response received : {0}", response));
+                            Logger.Log(string.Format("INFO :: Node startup notification response received : {0}", response));
                         }
                     }
                 }

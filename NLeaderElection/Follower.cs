@@ -226,11 +226,11 @@ namespace NLeaderElection
             {
                 try
                 {
-                    MessageBroker.GetInstance().SendNodeStartupNotification(node); 
+                    Task.Run(() => { MessageBroker.GetInstance().SendNodeStartupNotification(node); });
                 }
                 catch (Exception exp)
                 {
-                    Logger.Log("Exp");
+                    Logger.Log(exp.Message);
                 }
                 
             }
