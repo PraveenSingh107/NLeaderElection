@@ -16,6 +16,7 @@ namespace NLeaderElection
         public NodeDataState CurrentStateData { get;  set; }
         private Dictionary<string, long> positiveVotes;
         private int totalResponseReceivedForCurrentTerm = 0;
+        private object lockerObject = new object();
 
         public Candidate() : this(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
         {}
@@ -45,6 +46,8 @@ namespace NLeaderElection
             if (electionTimeout != null)
             {
                 electionTimeout.Elapsed -= electionTimeoutElapsed;
+                electionTimeout.Stop();
+                electionTimeout.Close();
             }
         }
 
@@ -60,9 +63,15 @@ namespace NLeaderElection
             else
             {
                 Logger.Log("INFO (C) :: Quorum won.");
-                DetachEventListerners();
-                NodeRegistryCache.GetInstance().PromoteCandidateToLeader(this);
-                electionTimeout.Stop();
+                lock (lockerObject)
+                {
+                    if (NodeRegistryCache.GetInstance().CurrentNode != null && NodeRegistryCache.GetInstance().CurrentNode is Candidate)
+                    {
+                        DetachEventListerners();
+                        NodeRegistryCache.GetInstance().PromoteCandidateToLeader(this);
+                        electionTimeout.Stop();
+                    }
+                }
                 //Dispose();
             }
         }
@@ -192,9 +201,14 @@ namespace NLeaderElection
         {
             if (IsServingCurrentTerm(termedPassed))
             {
-                DetachEventListerners();
-                NodeRegistryCache.GetInstance().DemoteCandidateToFollower();
-                return 0;
+                lock(lockerObject)
+                if (NodeRegistryCache.GetInstance().CurrentNode != null && NodeRegistryCache.GetInstance().CurrentNode is Candidate)
+                {
+                    DetachEventListerners();
+                    NodeRegistryCache.GetInstance().DemoteCandidateToFollower();
+                    return 0;
+                }
+                else return -1;
             }
             else if (IsWorkingOnStaleTerm(termedPassed))
             {

@@ -13,7 +13,7 @@ namespace NLeaderElection
     {
         public NodeDataState CurrentStateData { get; set; }
         public List<Follower> Followers { get; private set; }
-        private object lockSender = new Object();
+        private object lockerObject = new Object();
         private Timer heartBeatTimeout;
 
         public Leader()
@@ -100,8 +100,12 @@ namespace NLeaderElection
         internal void HeartBeatSignalReceivedFromLeader(long p)
         {
             Logger.Log(string.Format("INFO (L) :: HB SIGNAL (REC) from leader."));
-            DetachEventListerners();
-            NodeRegistryCache.GetInstance().DemoteLeaderToFollower();
+            lock (lockerObject)
+            {
+                if (NodeRegistryCache.GetInstance().CurrentNode != null && NodeRegistryCache.GetInstance().CurrentNode is Leader)
+                DetachEventListerners();
+                NodeRegistryCache.GetInstance().DemoteLeaderToFollower();
+            }
         }
 
         public override long GetTerm()
@@ -124,6 +128,8 @@ namespace NLeaderElection
             if (heartBeatTimeout != null)
             {
                 heartBeatTimeout.Elapsed -= HeartBeatTimeoutElapsed;
+                heartBeatTimeout.Stop();
+                heartBeatTimeout.Close();
             }
         }
     }
