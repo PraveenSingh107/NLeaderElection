@@ -51,23 +51,37 @@ namespace NLeaderElection
         public void PromoteFollowerToCandidate(Follower follower)
         {
             Candidate candidate = new Candidate(follower.GetNodeId(),follower.GetIP());
-            candidate.IP =  follower.IP;
-            candidate.UpdateTerm(follower.CurrentStateData.Term);
-            candidate.IncrementTerm();
-            this.CurrentNode = candidate;
-            //follower.Dispose();
-            Logger.Log(string.Format("INFO (FTC) :: {0} promoted to Candidate {1} .",follower,candidate));
-            candidate.SendRequestVotesToFollowers();
+            if (candidate != null)
+            {
+                candidate.IP = follower.IP;
+                candidate.UpdateTerm(follower.CurrentStateData.Term);
+                candidate.IncrementTerm();
+                this.CurrentNode = candidate;
+                //follower.Dispose();
+                Logger.Log(string.Format("INFO (FTC) :: {0} promoted to Candidate {1} .", follower, candidate));
+                candidate.SendRequestVotesToFollowers();
+            }
+            else
+            {
+                Logger.Log("WARNING ! FOLLOWER IS ALREADY PROMOTED TO CANDIDATE. NODE IS NOT A FOLLOWER.");
+            }
         }
 
         internal void PromoteCandidateToLeader(Candidate candidate)
         {
             Leader leader = new Leader(candidate.GetNodeId(),candidate.GetIP(),candidate.CurrentStateData.Term);
-            candidate.IP = candidate.IP;
-            candidate.UpdateTerm(candidate.CurrentStateData.Term);
-            this.CurrentNode = leader;
-            //candidate.Dispose();
-            Logger.Log(string.Format("INFO (CTL) :: {0} promoted to Leader {1} .", candidate, leader));
+            if (leader != null)
+            {
+                candidate.IP = candidate.IP;
+                candidate.UpdateTerm(candidate.CurrentStateData.Term);
+                this.CurrentNode = leader;
+                //candidate.Dispose();
+                Logger.Log(string.Format("INFO (CTL) :: {0} promoted to Leader {1} .", candidate, leader));
+            }
+            else
+            {
+                Logger.Log("WARNING ! CANDIDATE ALREADY PROMOTED TO LEADER. NODE IS NOT A CANDIDATE.");
+            }
         }
 
         internal void NofifyHeartbeatReceived(string content)
@@ -90,23 +104,37 @@ namespace NLeaderElection
         internal void DemoteCandidateToFollower()
         {
             Candidate candidate = (CurrentNode as Candidate);
-            Follower follower = new Follower(candidate.GetNodeId(), candidate.GetIP());
-            follower.UpdateTerm(candidate.GetPreviousTerm());
-            this.CurrentNode = follower;
-            //candidate.Dispose();
-            follower.StartHeartbeatTimouts();
-            Logger.Log(string.Format("INFO (CTF) :: {0} demoted to Follower {1} .", candidate, follower));
+            if(candidate != null)
+            {
+                Follower follower = new Follower(candidate.GetNodeId(), candidate.GetIP());
+                follower.UpdateTerm(candidate.GetPreviousTerm());
+                this.CurrentNode = follower;
+                //candidate.Dispose();
+                follower.StartHeartbeatTimouts();
+                Logger.Log(string.Format("INFO (CTF) :: {0} demoted to Follower {1} .", candidate, follower));
+            }
+            else
+            {
+                Logger.Log("WARNING ! WRONG CALL TO DEMOTE CANDIDATE TO FOLLOWER. CANDIDATE ALREADY DEMOTED.");
+            }
         }
 
         internal void DemoteLeaderToFollower()
         {
             Leader leader = (CurrentNode as Leader);
-            Follower follower = new Follower(leader.GetNodeId(), leader.GetIP());
-            follower.UpdateTerm(leader.CurrentStateData.Term);
-            this.CurrentNode = follower;
-            //leader.Dispose();
-            follower.StartHeartbeatTimouts();
-            Logger.Log(string.Format("INFO (LTF) :: {0} demoted to Follower {1} .", leader, follower));
+            if (leader != null)
+            {
+                Follower follower = new Follower(leader.GetNodeId(), leader.GetIP());
+                follower.UpdateTerm(leader.CurrentStateData.Term);
+                this.CurrentNode = follower;
+                //leader.Dispose();
+                follower.StartHeartbeatTimouts();
+                Logger.Log(string.Format("INFO (LTF) :: {0} demoted to Follower {1} .", leader, follower));
+            }
+            else
+            {
+                Logger.Log("WARNING ! WRONG CALL TO DEMOTE LEADER TO FOLLOWER. LEADER ALREADY DEMOTED.");
+            }
         }
     }
 }

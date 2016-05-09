@@ -224,7 +224,8 @@ namespace NLeaderElection
 
         private void UpdateNodeLogEntries()
         {
-            throw new NotImplementedException();
+            // TO DO
+            //throw new NotImplementedException();
         }
 
         private bool IsServingCurrentTerm(long term)

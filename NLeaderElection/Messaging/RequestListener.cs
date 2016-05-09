@@ -81,27 +81,38 @@ namespace NLeaderElection.Messaging
 
         private static void HeartbeatReadCallback(IAsyncResult ar)
         {
-            String content = String.Empty;
-            StateObject state = (StateObject)ar.AsyncState;
-            Socket handler = state.workSocket;
-
-            // Read data from the client socket. 
-            int bytesRead = handler.EndReceive(ar);
-
-            if (bytesRead > 0)
+            try
             {
-                state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
-                content = state.sb.ToString();
-                if (content.IndexOf("<EOF>") > -1)
+                String content = String.Empty;
+                StateObject state = (StateObject)ar.AsyncState;
+                Socket handler = state.workSocket;
+
+                // Read data from the client socket. 
+                int bytesRead = handler.EndReceive(ar);
+
+                if (bytesRead > 0)
                 {
-                    NodeRegistryCache.GetInstance().NofifyHeartbeatReceived(content);
+                    state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+                    content = state.sb.ToString();
+                    if (content.IndexOf("<EOF>") > -1)
+                    {
+                        NodeRegistryCache.GetInstance().NofifyHeartbeatReceived(content);
+                    }
+                    else
+                    {
+                        // Not all data received. Get more.
+                        handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                        new AsyncCallback(HeartbeatReadCallback), state);
+                    }
                 }
-                else
-                {
-                    // Not all data received. Get more.
-                    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
-                    new AsyncCallback(HeartbeatReadCallback), state);
-                }
+            }
+            catch (SocketException sExp)
+            {
+                Logger.Log("Error :: " + sExp.Message);
+            }
+            catch (Exception exp)
+            {
+                Logger.Log("Error :: " + exp.Message);
             }
         }
 
