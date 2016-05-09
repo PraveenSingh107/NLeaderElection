@@ -26,7 +26,8 @@ namespace NLeaderElection.Messaging
         public static void StartListeningOnPorts()
         {
 
-            Task.Run(() => { WaitForRequestVotesFromCandidateAsync(); });
+            Task.Run(() => { WaitForRequestVoteRPCAsync(); });
+            Task.Run(() => { WaitForRequestVoteRPCResponseAsync(); });
             Task.Run(() => { WaitForStartupMessageFromFollowerAsync(); });
             Task.Run(() => { WaitForHeartbeatMessageFromLeaderAsync(); });
             candidatePortSwitch.WaitOne();
@@ -42,13 +43,13 @@ namespace NLeaderElection.Messaging
             IPEndPoint endPoint = new IPEndPoint(NodeRegistryCache.GetInstance().IP, HEARTBEAT_PORT_NUMBER);
 
             Socket socketListener = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            
+
             try
             {
                 socketListener.Bind(endPoint);
                 Logger.Log("INFO :: Node started Listening for heartbeat signals on port " + HEARTBEAT_PORT_NUMBER + " .");
                 socketListener.Listen(1000);
-                
+
                 while (true)
                 {
                     heartbeatAsyncHandler.Reset();
@@ -99,7 +100,7 @@ namespace NLeaderElection.Messaging
                 {
                     // Not all data received. Get more.
                     handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
-                    new AsyncCallback(FollowerReadCallback), state);
+                    new AsyncCallback(HeartbeatReadCallback), state);
                 }
             }
         }
@@ -108,33 +109,47 @@ namespace NLeaderElection.Messaging
         {
         }
 
-        private static void WaitForRequestVotesFromCandidateAsync()
+        #region Wait for request vote RPC
+
+        private static void WaitForRequestVoteRPCAsync()
         {
-            byte[] incomingData = new byte[1024];
-            byte[] outGoingData = new byte[1024];
-
-            IPEndPoint followerEndPoint = new IPEndPoint(NodeRegistryCache.GetInstance().IP, FOLLOWER_PORT_NUMBER);
-            IPEndPoint candidateEndPoint = new IPEndPoint(NodeRegistryCache.GetInstance().IP, CANDIDATE_PORT_NUMBER);
-
-            Socket followerListener = new Socket(followerEndPoint.AddressFamily,SocketType.Stream, ProtocolType.Tcp);
-            Socket candidateListener = new Socket(candidateEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
+            IPEndPoint followerLisRequestEndPoint = new IPEndPoint(NodeRegistryCache.GetInstance().IP, FOLLOWER_PORT_NUMBER);
+            Socket followerRequestListenerSocket = new Socket(followerLisRequestEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            
             try
             {
-                followerListener.Bind(followerEndPoint);
-                candidateListener.Bind(candidateEndPoint);
-                Logger.Log("INFO :: Follower started Listening on port " + FOLLOWER_PORT_NUMBER + " .");
-                Logger.Log("INFO :: Candidate started Listening on port " + CANDIDATE_PORT_NUMBER + " .");
-                followerListener.Listen(1000);
-                candidateListener.Listen(1000);
+                followerRequestListenerSocket.Bind(followerLisRequestEndPoint);
+                Logger.Log("INFO :: Follower started Listening for REQUEST VOTE RPC on port " + FOLLOWER_PORT_NUMBER + " .");
+                followerRequestListenerSocket.Listen(1000);
                 while (true)
                 {
                     followerAsyncHandler.Reset();
-                    candidateAsyncHandler.Reset();
-                    followerListener.BeginAccept(FollowerAcceptCallback, followerListener);
-                    candidateListener.BeginAccept(CandidateAcceptCallback, candidateListener);
+                    followerRequestListenerSocket.BeginAccept(FollowerRVRequestListenerAcceptCallback, followerRequestListenerSocket);
                     candidatePortSwitch.Set();
                     followerAsyncHandler.WaitOne();
+                }
+            }
+            catch (Exception exp)
+            {
+                Logger.Log(exp.Message);
+            }
+        }
+
+        private static void WaitForRequestVoteRPCResponseAsync()
+        {
+            IPEndPoint candidateLisResponseEndPoint = new IPEndPoint(NodeRegistryCache.GetInstance().IP, CANDIDATE_PORT_NUMBER);
+            Socket candidateResponseListenerSocket = new Socket(candidateLisResponseEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            try
+            {
+                candidateResponseListenerSocket.Bind(candidateLisResponseEndPoint);
+                Logger.Log("INFO :: Candidate started Listening for REQUEST VOTE RPC (RES) on port " + CANDIDATE_PORT_NUMBER + " .");
+                candidateResponseListenerSocket.Listen(1000);
+                while (true)
+                {
+                    candidateAsyncHandler.Reset();
+                    candidateResponseListenerSocket.BeginAccept(CandidateRVResponseListenerAcceptCallback, candidateResponseListenerSocket);
+                    candidatePortSwitch.Set();
                     candidateAsyncHandler.WaitOne();
                 }
             }
@@ -145,21 +160,96 @@ namespace NLeaderElection.Messaging
             }
         }
 
-        public static void FollowerAcceptCallback(IAsyncResult ar)
+        private static void CandidateRVResponseListenerAcceptCallback(IAsyncResult ar)
         {
-            followerAsyncHandler.Set();
+            try
+            {
+                followerAsyncHandler.Set();
 
-            Socket listener = (Socket)ar.AsyncState;
-            Socket handler = listener.EndAccept(ar);
+                Socket listener = (Socket)ar.AsyncState;
+                Socket handler = listener.EndAccept(ar);
 
-            // Create the state object.
-            StateObject state = new StateObject();
-            state.workSocket = handler;
-            handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
-                new AsyncCallback(FollowerReadCallback), state);
+                // Create the state object.
+                StateObject state = new StateObject();
+                state.workSocket = handler;
+                handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                    new AsyncCallback(CandidateRVResponseReadCallback), state);
+            }
+            catch (SocketException sExp)
+            {
+                Logger.Log(sExp.Message);
+            }
+            catch (Exception exp)
+            {
+                Logger.Log(exp.Message);
+            }
         }
 
-        public static void FollowerReadCallback(IAsyncResult ar)
+        private static void CandidateRVResponseReadCallback(IAsyncResult ar)
+        {
+            String content = String.Empty;
+            StateObject state = (StateObject)ar.AsyncState;
+            Socket handler = state.workSocket;
+
+            // Read data from the client socket. 
+            int bytesRead = handler.EndReceive(ar);
+
+            if (bytesRead > 0)
+            {
+                // There  might be more data, so store the data received so far.
+                state.sb.Append(Encoding.ASCII.GetString(
+                    state.buffer, 0, bytesRead));
+
+                content = state.sb.ToString();
+                if (content.IndexOf("<EOF>") > -1)
+                {
+                    string outputContect = MessageBroker.GetInstance().FollowerProcessIncomingDataFromCandidate(content);
+                    Logger.Log("INFO :: REQUEST VOTE RPC (REC).");
+                    Candidate candidate = (NodeRegistryCache.GetInstance().CurrentNode as Candidate);
+                    if (candidate != null)
+                    {
+                        candidate.ResponseCallbackFromFollower(content);
+                    }
+                    else
+                    {
+                        // TO DO . exception response should be passed to candidate node. Log exception
+                    }
+                }
+                else
+                {
+                    // Not all data received. Get more.
+                    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                    new AsyncCallback(CandidateRVResponseReadCallback), state);
+                }
+            }
+        }
+
+        private static void FollowerRVRequestListenerAcceptCallback(IAsyncResult ar)
+        {
+            try
+            {
+                followerAsyncHandler.Set();
+
+                Socket listener = (Socket)ar.AsyncState;
+                Socket handler = listener.EndAccept(ar);
+
+                // Create the state object.
+                StateObject state = new StateObject();
+                state.workSocket = handler;
+                handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                    new AsyncCallback(FollowerRVRequestReadCallback), state);
+            }
+            catch (SocketException sExp)
+            {
+                Logger.Log(sExp.Message);
+            }
+            catch (Exception exp)
+            {
+                Logger.Log(exp.Message);
+            }
+        }
+
+        private static void FollowerRVRequestReadCallback(IAsyncResult ar)
         {
             String content = String.Empty;
             StateObject state = (StateObject)ar.AsyncState;
@@ -181,19 +271,74 @@ namespace NLeaderElection.Messaging
                 {
                     // All the data has been read from the 
                     // client. Display it on the console.
-                    
+
                     string outputContect = MessageBroker.GetInstance().FollowerProcessIncomingDataFromCandidate(content);
                     // Echo the data back to the client.
-                    MessageBroker.GetInstance().FollowerSendRequestRPCResponse(handler, outputContect);
+                    
+                    IPEndPoint remoteIP = (handler.RemoteEndPoint as IPEndPoint);
+                    MessageBroker.GetInstance().FollowerSendRVResponseAsync(remoteIP.Address, outputContect);
                 }
                 else
                 {
                     // Not all data received. Get more.
                     handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
-                    new AsyncCallback(FollowerReadCallback), state);
+                    new AsyncCallback(FollowerRVRequestReadCallback), state);
                 }
             }
         }
+
+        #endregion Wait for request vote RPC
+
+
+        //public static void FollowerAcceptCallback(IAsyncResult ar)
+        //{
+        //    followerAsyncHandler.Set();
+
+        //    Socket listener = (Socket)ar.AsyncState;
+        //    Socket handler = listener.EndAccept(ar);
+
+        //    // Create the state object.
+        //    StateObject state = new StateObject();
+        //    state.workSocket = handler;
+        //    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+        //        new AsyncCallback(FollowerReadCallback), state);
+        //}
+
+        //public static void FollowerReadCallback(IAsyncResult ar)
+        //{
+        //    String content = String.Empty;
+        //    StateObject state = (StateObject)ar.AsyncState;
+        //    Socket handler = state.workSocket;
+
+        //    // Read data from the client socket. 
+        //    int bytesRead = handler.EndReceive(ar);
+
+        //    if (bytesRead > 0)
+        //    {
+        //        // There  might be more data, so store the data received so far.
+        //        state.sb.Append(Encoding.ASCII.GetString(
+        //            state.buffer, 0, bytesRead));
+
+        //        // Check for end-of-file tag. If it is not there, read 
+        //        // more data.
+        //        content = state.sb.ToString();
+        //        if (content.IndexOf("<EOF>") > -1)
+        //        {
+        //            // All the data has been read from the 
+        //            // client. Display it on the console.
+
+        //            string outputContect = MessageBroker.GetInstance().FollowerProcessIncomingDataFromCandidate(content);
+        //            // Echo the data back to the client.
+        //            MessageBroker.GetInstance().FollowerSendRequestRVResponse(handler, outputContect);
+        //        }
+        //        else
+        //        {
+        //            // Not all data received. Get more.
+        //            handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+        //            new AsyncCallback(FollowerReadCallback), state);
+        //        }
+        //    }
+        //}
 
         public static void CandidateAcceptCallback(IAsyncResult ar)
         {
@@ -245,7 +390,7 @@ namespace NLeaderElection.Messaging
                 {
                     // Not all data received. Get more.
                     handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
-                    new AsyncCallback(FollowerReadCallback), state);
+                    new AsyncCallback(CandidateReadCallback), state);
                 }
             }
         }
@@ -260,7 +405,7 @@ namespace NLeaderElection.Messaging
                 startupFollowerListener.Bind(startupFollowerEndPoint);
                 Logger.Log("INFO :: Node started Listening on port " + STARTUP_PORT_NUMBER + " for new joining followers.");
                 startupFollowerListener.Listen(1000);
-                
+
                 while (true)
                 {
                     startupAsyncHandler.Reset();
@@ -318,10 +463,10 @@ namespace NLeaderElection.Messaging
                         IPAddress ip = new IPAddress(ipPartsArr);
                         DummyFollowerNode node = new DummyFollowerNode(ip);
                         NodeRegistryCache.GetInstance().Register(node);
-                        Logger.Log("New node "+ node.ToString() + " successfully added in the cluster.");
-                        
+                        Logger.Log("New node " + node.ToString() + " successfully added in the cluster.");
+
                         // send term as the output
-                        string responseMsg = NodeRegistryCache.GetInstance().CurrentNode.GetNodeId() + "##" 
+                        string responseMsg = NodeRegistryCache.GetInstance().CurrentNode.GetNodeId() + "##"
                             + NodeRegistryCache.GetInstance().CurrentNode.GetTerm() + "##<EOF>";
 
                         SendStartupMessageResponse(handler, responseMsg);
