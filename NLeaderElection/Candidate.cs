@@ -51,7 +51,7 @@ namespace NLeaderElection
             }
         }
 
-        void electionTimeoutElapsed(object sender, ElapsedEventArgs e)
+        private void electionTimeoutElapsed(object sender, ElapsedEventArgs e)
         {
             if (!TryGettingConsensus())
             {
@@ -120,11 +120,6 @@ namespace NLeaderElection
             }
         }
 
-        public Leader BecomeALeader()
-        {
-            return new Leader();
-        }
-
         # region Disposable
 
         public void Dispose()
@@ -172,7 +167,7 @@ namespace NLeaderElection
                 var responseParts = content.Split(new String[] { "##" }, StringSplitOptions.RemoveEmptyEntries);
                 if (responseParts != null && responseParts.Count() >= 2)
                 {
-                    RequestVoteRPCResponse response = new RequestVoteRPCResponse(responseParts[0], getRequestRPCResponse(responseParts[1]));
+                    RequestVoteRPCResponse response = new RequestVoteRPCResponse(responseParts[0], GetRequestRPCResponse(responseParts[1]));
                     ResponseCallbackFromFollower(response);
                 }
                 else
@@ -182,7 +177,7 @@ namespace NLeaderElection
              }
         }
 
-        private RequestVoteResponseType getRequestRPCResponse(string type)
+        private RequestVoteResponseType GetRequestRPCResponse(string type)
         {
             if (type.Equals("PositiveVote"))
                 return RequestVoteResponseType.PositiveVote;
@@ -205,6 +200,7 @@ namespace NLeaderElection
                 if (NodeRegistryCache.GetInstance().CurrentNode != null && NodeRegistryCache.GetInstance().CurrentNode is Candidate)
                 {
                     DetachEventListerners();
+                    DecrementTermOnDemotion();
                     NodeRegistryCache.GetInstance().DemoteCandidateToFollower();
                     return 0;
                 }
@@ -220,6 +216,12 @@ namespace NLeaderElection
                 return -1;
                // RequestLeaderToStepDown();
             }
+        }
+
+        private void DecrementTermOnDemotion()
+        {
+            if (this.CurrentStateData != null)
+                -- this.CurrentStateData.Term;
         }
 
         private void UpdateNodeLogEntries()
