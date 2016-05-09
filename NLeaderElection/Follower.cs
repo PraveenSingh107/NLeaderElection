@@ -83,7 +83,6 @@ namespace NLeaderElection
         {
             HeartBeatTimeout.Stop();
             HeartBeatTimeout.Start();
-            Logger.Log("INFO :: Reset heartbeat timeout.");
         }
 
         /// <summary>
@@ -99,8 +98,10 @@ namespace NLeaderElection
         {
             //Restart heartbeat as there is already a candidate. Might sujbect to check the term to verify
             //that this message is not from old candidate
-            HeartBeatTimeoutReset();
             Logger.Log(string.Format("INFO :: REQUEST VOTE RPC (REC) from candidate for term {0} .",requestVote.GetTerm()));
+            HeartBeatTimeoutReset();
+            Logger.Log("INFO (F) :: Restarted the heart beat timeout.");
+
             RequestVoteRPCResponse response;
             
             if (HasAleadyVoted())
@@ -135,15 +136,18 @@ namespace NLeaderElection
 
         public virtual void HeartBeatSignalReceivedFromLeader(long term)
         {
-            Logger.Log(string.Format("INFO :: HB SIGNAL (REC) from leader for term {0} .", term));
+            Logger.Log(string.Format("INFO (F) :: HB SIGNAL (REC) from leader for term {0} .", term));
 
             if (term.Equals(CurrentStateData.Term))
             {
                 HeartBeatTimeoutReset();
+                Logger.Log("INFO (F) :: Restarted the heart beat timeout.");
             }
             else if (term > CurrentStateData.Term)
             {
-                Logger.Log("WARN (F)! Follower has an older term [OF]. Update the log entries to sync with leader.");
+                Logger.Log("WARN (F)! Follower has an older term [OF]. Updating the log entries to sync with leader.");
+                Logger.Log(string.Format("INFO (F) :: Updated term from {0} to {1}. ", CurrentStateData.Term, term));
+                CurrentStateData.Term = term;
                 HeartBeatTimeoutReset();
             }
             else
@@ -173,7 +177,7 @@ namespace NLeaderElection
             }
             else if(term > CurrentStateData.Term)
             {
-                Logger.Log("WARN ! Follower has an older term [OF]. Update the log entries to sync with leader.");
+                Logger.Log("WARN ! Follower has an older term [OF]. Updating the log entries to sync with leader.");
                 return true;
             }
             else

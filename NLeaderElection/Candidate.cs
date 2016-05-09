@@ -208,7 +208,7 @@ namespace NLeaderElection
             }
             else if (IsWorkingOnStaleTerm(termedPassed))
             {
-                UpdateNodeLogEntries();
+                UpdateNodeLogEntries(termedPassed);
                 return 0;
             }
             else
@@ -224,10 +224,9 @@ namespace NLeaderElection
                 -- this.CurrentStateData.Term;
         }
 
-        private void UpdateNodeLogEntries()
+        private void UpdateNodeLogEntries(long term)
         {
-            // TO DO
-            //throw new NotImplementedException();
+            this.CurrentStateData.Term = term;
         }
 
         private bool IsServingCurrentTerm(long term)
