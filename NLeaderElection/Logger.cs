@@ -12,6 +12,7 @@ namespace NLeaderElection
         
         public static void Log(Exception exp)
         {
+            if(exp != null)
             do
             {
                 // TO DO Wrtie log using log4net

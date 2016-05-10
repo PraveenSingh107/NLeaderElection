@@ -147,14 +147,15 @@ namespace NLeaderElection
         {
             if (positiveVotes != null)
             {
-                if (!positiveVotes.ContainsKey(response.FollowerId) && this.CurrentStateData.Term == response.Term)
+                if (!positiveVotes.ContainsKey(response.FollowerId) && this.CurrentStateData.Term == response.Term 
+                    && response.ResponseType == RequestVoteResponseType.PositiveVote)
                 {
                     positiveVotes.Add(response.FollowerId, response.Term);
                     totalResponseReceivedForCurrentTerm++;
                 }
                 else if (this.CurrentStateData.Term == response.Term)
                 {
-                    positiveVotes[response.FollowerId] = response.Term;
+                    //positiveVotes[response.FollowerId] = response.Term;
                     totalResponseReceivedForCurrentTerm++;
                 }
             }

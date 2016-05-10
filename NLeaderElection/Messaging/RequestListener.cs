@@ -214,8 +214,7 @@ namespace NLeaderElection.Messaging
                 content = state.sb.ToString();
                 if (content.IndexOf("<EOF>") > -1)
                 {
-                    string outputContect = MessageBroker.GetInstance().FollowerProcessIncomingDataFromCandidate(content);
-                    Logger.Log("INFO :: REQUEST VOTE RPC Response (REC).");
+                    Logger.Log("INFO :: REQUEST VOTE RPC Response (REC'D).");
                     Candidate candidate = (NodeRegistryCache.GetInstance().CurrentNode as Candidate);
                     if (candidate != null)
                     {
