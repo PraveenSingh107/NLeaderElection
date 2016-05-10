@@ -18,7 +18,7 @@ namespace NLeaderElection
                 Console.WriteLine(string.Format("Stack trace : {0}. Message : {1}", exp.StackTrace, exp.Message));
                 exp = exp.InnerException;
             }
-            while (exp.InnerException != null);
+            while (exp != null);
         }
 
         public static void Log(string msg)

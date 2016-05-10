@@ -32,7 +32,7 @@ namespace NLeaderElection
             this.term = term;
         }
 
-        public override void IncrementTerm()
+        public void IncrementTerm()
         {
             this.term++;
         }

@@ -118,10 +118,10 @@ namespace NLeaderElection
             this.CurrentStateData.Term = term;
         }
 
-        public override void IncrementTerm()
-        {
-            this.CurrentStateData.Term++;
-        }
+        //public override void IncrementTerm()
+        //{
+        //    this.CurrentStateData.Term++;
+        //}
 
         internal void DetachEventListerners()
         {

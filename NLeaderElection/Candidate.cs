@@ -251,7 +251,7 @@ namespace NLeaderElection
             this.CurrentStateData.Term = term;
         }
 
-        public override void IncrementTerm()
+        public void IncrementTerm()
         {
             this.CurrentStateData.Term++;
         }

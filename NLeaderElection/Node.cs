@@ -54,7 +54,7 @@ namespace NLeaderElection
 
         public abstract void UpdateTerm(long term);
 
-        public abstract void IncrementTerm();
+        //public abstract void IncrementTerm();
 
         public string GetNodeId()
         {
