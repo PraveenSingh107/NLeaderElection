@@ -153,6 +153,17 @@ namespace NLeaderElection
                     positiveVotes.Add(response.FollowerId, response.Term);
                     totalResponseReceivedForCurrentTerm++;
                 }
+                else if (response.ResponseType == RequestVoteResponseType.RequestedVoteToLeader && this.CurrentStateData.Term == response.Term)
+                {
+                    Logger.Log("INFO (C) :: One leader already exist. Stepping down.");
+                    DetachEventListerners();
+                    DecrementTermOnDemotion();
+                    NodeRegistryCache.GetInstance().DemoteCandidateToFollower();
+                }
+                else if (response.ResponseType == RequestVoteResponseType.RequestedVoteToCandidate && this.CurrentStateData.Term == response.Term)
+                {
+                    totalResponseReceivedForCurrentTerm++;
+                }
                 else if (this.CurrentStateData.Term == response.Term)
                 {
                     //positiveVotes[response.FollowerId] = response.Term;
@@ -166,9 +177,10 @@ namespace NLeaderElection
             if (!string.IsNullOrEmpty(content))
             {
                 var responseParts = content.Split(new String[] { "##" }, StringSplitOptions.RemoveEmptyEntries);
-                if (responseParts != null && responseParts.Count() >= 2)
+                if (responseParts != null && responseParts.Count() >= 3)
                 {
-                    RequestVoteRPCResponse response = new RequestVoteRPCResponse(responseParts[0], GetRequestRPCResponse(responseParts[1]));
+                    RequestVoteRPCResponse response = new RequestVoteRPCResponse(responseParts[2], GetRequestRPCResponse(responseParts[0]),
+                        Convert.ToInt64(responseParts[1]));
                     ResponseCallbackFromFollower(response);
                 }
                 else
@@ -184,8 +196,10 @@ namespace NLeaderElection
                 return RequestVoteResponseType.PositiveVote;
             else if (type.Equals("AlreadyVotedForCurrentTerm"))
                 return RequestVoteResponseType.AlreadyVotedForCurrentTerm;
-            else
+            else if (type.Equals("StaleRequestVoteMessage"))
                 return RequestVoteResponseType.StaleRequestVoteMessage;
+            else
+                return RequestVoteResponseType.RequestedVoteToLeader;
         }
 
         internal IPAddress GetIP()

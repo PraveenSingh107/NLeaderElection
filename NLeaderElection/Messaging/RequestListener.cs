@@ -220,9 +220,13 @@ namespace NLeaderElection.Messaging
                     {
                         candidate.ResponseCallbackFromFollower(content);
                     }
-                    else
+                    else if (NodeRegistryCache.GetInstance().CurrentNode is Leader)
                     {
-                        // TO DO . exception response should be passed to candidate node. Log exception
+                        Logger.Log("INFO (L) :: Late RV response received.");
+                    }
+                    else 
+                    {
+                        Logger.Log("INFO (F) :: Late RV response received. Aleady demoted to follower.");
                     }
                 }
                 else
@@ -282,7 +286,7 @@ namespace NLeaderElection.Messaging
                     // All the data has been read from the 
                     // client. Display it on the console.
 
-                    string outputContect = MessageBroker.GetInstance().FollowerProcessIncomingDataFromCandidate(content);
+                    string outputContect = MessageBroker.GetInstance().ProcessIncomingRVRequestFromCandidate(content);
                     // Echo the data back to the client.
                     
                     IPEndPoint remoteIP = (handler.RemoteEndPoint as IPEndPoint);

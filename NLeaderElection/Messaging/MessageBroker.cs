@@ -405,25 +405,36 @@ namespace NLeaderElection.Messaging
             }
         }
 
-        public string FollowerProcessIncomingDataFromCandidate(string content)
+        public string ProcessIncomingRVRequestFromCandidate(string content)
         {
             var tokens = content.Split(new String[] { "##" }, StringSplitOptions.RemoveEmptyEntries);
-            Follower currentFollower = (NodeRegistryCache.GetInstance().CurrentNode as Follower);
-            if (currentFollower != null && tokens != null)
-            {
-                var response = currentFollower.RespondToRequestVoteFromCandidate(new RequestVoteRPCMessage(
-                    Convert.ToInt64(tokens[0])));
 
-                return response.ResponseType.ToString() + "##" + response.Term.ToString()
-                    + "##" + response.FollowerId.ToString() + "<EOF>";
-            }
-            else if (tokens.Count() <= 0)
+            if (tokens.Count() <= 0)
             {
-                return "Exception: Wrong input sent.<EOF>";
+                return "Exception: Wrong Request vote RPC sent.<EOF>";
             }
             else
             {
-                return "Eception: Symentic exception. Case not handled.<EOF>";
+                Follower currentFollower = (NodeRegistryCache.GetInstance().CurrentNode as Follower);
+                if (currentFollower != null)
+                {
+                    var response = currentFollower.RespondToRequestVoteFromCandidate(new RequestVoteRPCMessage(
+                    Convert.ToInt64(tokens[0])));
+
+                    return response.ResponseType.ToString() + "##" + response.Term.ToString()
+                        + "##" + response.FollowerId.ToString() + "<EOF>";
+                }
+                else if (NodeRegistryCache.GetInstance().CurrentNode is Candidate)
+                {
+                    return RequestVoteResponseType.AlreadyVotedForCurrentTerm.ToString() + "##" + tokens[0]
+                    + "##" + NodeRegistryCache.GetInstance().CurrentNode.GetNodeId().ToString() + "<EOF>";
+                }
+                else 
+                {
+                    return RequestVoteResponseType.RequestedVoteToLeader.ToString() + "##" + tokens[0]
+                    + "##" + NodeRegistryCache.GetInstance().CurrentNode.GetNodeId().ToString() + "<EOF>";
+                }
+
             }
         }
 

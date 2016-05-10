@@ -106,17 +106,17 @@ namespace NLeaderElection
             
             if (HasAleadyVoted())
             {
-                response = new RequestVoteRPCResponse(nodeId, RequestVoteResponseType.AlreadyVotedForCurrentTerm);
+                response = new RequestVoteRPCResponse(nodeId, RequestVoteResponseType.AlreadyVotedForCurrentTerm,requestVote.GetTerm());
             }
             else
             {
                 if (requestVote.HasMoreRecentTerm(CurrentStateData.Term))
                 {
-                    response = new RequestVoteRPCResponse(nodeId, RequestVoteResponseType.StaleRequestVoteMessage);
+                    response = new RequestVoteRPCResponse(nodeId, RequestVoteResponseType.StaleRequestVoteMessage, requestVote.GetTerm());
                 }
                 else
                 {
-                    response = new RequestVoteRPCResponse(nodeId, RequestVoteResponseType.PositiveVote);
+                    response = new RequestVoteRPCResponse(nodeId, RequestVoteResponseType.PositiveVote, requestVote.GetTerm());
                 }
             }
             Logger.Log(string.Format("INFO :: REQUEST VOTE RPC (RES'ING) from candidate for term {0} .",requestVote.GetTerm()));

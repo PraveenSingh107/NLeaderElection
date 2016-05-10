@@ -11,7 +11,9 @@ namespace NLeaderElection.Messages
     {
         PositiveVote,
         AlreadyVotedForCurrentTerm,
-        StaleRequestVoteMessage
+        StaleRequestVoteMessage,
+        RequestedVoteToLeader,
+        RequestedVoteToCandidate
     }
 
     public class RequestVoteRPCResponse
@@ -19,10 +21,11 @@ namespace NLeaderElection.Messages
         public string FollowerId { get;private set; }
         public RequestVoteResponseType ResponseType { get; set; }
         public long Term { get; private set; }
-        public RequestVoteRPCResponse(string followerId, RequestVoteResponseType responseType )
+        public RequestVoteRPCResponse(string followerId, RequestVoteResponseType responseType, long returnedTerm)
         {
             this.FollowerId = followerId;
             this.ResponseType = responseType;
+            this.Term = returnedTerm;
         }
     }
 }
