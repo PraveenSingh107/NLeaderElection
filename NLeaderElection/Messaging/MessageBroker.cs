@@ -207,7 +207,7 @@ namespace NLeaderElection.Messaging
                 candidateConnectDone.WaitOne();
 
                 // Send test data to the remote device.
-                Send(candidateSocket, term + "##<EOF>");
+                Send(candidateSocket, term.ToString() + "##<EOF>");
                 candidateSendDone.WaitOne();
 
                 // Write the response to the console.
