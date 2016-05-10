@@ -16,7 +16,7 @@ namespace NLeaderElection
             {
                 // TO DO Wrtie log using log4net
                 exp = exp.InnerException;
-                Console.WriteLine(exp.Message);
+                Console.WriteLine(string.Format("Stack trace : {0}. Message : {1}", exp.StackTrace, exp.Message));
             }
             while (exp.InnerException != null);
         }

@@ -83,11 +83,11 @@ namespace NLeaderElection.Messaging
             }
             catch (SocketException scExp)
             {
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
             }
             catch (Exception e)
             {
-                Logger.Log(e.Message);
+                Logger.Log(e);
             }
             finally
             {
@@ -119,13 +119,13 @@ namespace NLeaderElection.Messaging
             catch (SocketException scExp)
             {
                 isLeaderConnectDone = false;
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
                 leaderSendDone.Set();
             }
             catch (Exception e)
             {
                 isLeaderConnectDone = false;
-                Logger.Log(e.Message);
+                Logger.Log(e);
                 leaderSendDone.Set();
             }
         }
@@ -144,12 +144,12 @@ namespace NLeaderElection.Messaging
             catch (SocketException scExp)
             {
                 isLeaderSendDone = false;
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
             }
             catch (Exception e)
             {
                 isLeaderSendDone = false;
-                Logger.Log(e.Message);
+                Logger.Log(e);
             }
             finally
             {
@@ -171,12 +171,12 @@ namespace NLeaderElection.Messaging
             catch (System.Net.Sockets.SocketException socketExp)
             {
                 isLeaderConnectDone = false;
-                Logger.Log(socketExp.Message);
+                Logger.Log(socketExp);
             }
             catch (Exception e)
             {
                 isLeaderConnectDone = false;
-                Logger.Log(e.Message);
+                Logger.Log(e);
             }
             finally
             {
@@ -216,11 +216,11 @@ namespace NLeaderElection.Messaging
             }
             catch (SocketException scExp)
             {
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
             }
             catch (Exception e)
             {
-                Logger.Log(e.Message);
+                Logger.Log(e);
             }
             finally
             {
@@ -251,13 +251,13 @@ namespace NLeaderElection.Messaging
             catch (SocketException scExp)
             {
                 isCandidateSendDone = false;
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
                 candidateSendDone.Set();
             }
             catch (Exception exp)
             {
                 isCandidateSendDone = false;
-                Logger.Log(exp.Message);
+                Logger.Log(exp);
                 candidateSendDone.Set();
             }
         }
@@ -277,12 +277,12 @@ namespace NLeaderElection.Messaging
             }
             catch (SocketException scExp)
             {
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
                 isCandidateSendDone = false;
             }
             catch (Exception e)
             {
-                Logger.Log(e.Message);
+                Logger.Log(e);
                 isCandidateSendDone = false;
             }
             finally
@@ -308,12 +308,12 @@ namespace NLeaderElection.Messaging
             catch (SocketException scExp)
             {
                 isCandidateConnectDone = false;
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
             }
             catch (Exception e)
             {
                 isCandidateConnectDone = false;
-                Logger.Log(e.Message);
+                Logger.Log(e);
             }
             finally
             {
@@ -356,11 +356,11 @@ namespace NLeaderElection.Messaging
             }
             catch (SocketException scExp)
             {
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
             }
             catch (Exception e)
             {
-                Logger.Log(e.Message);
+                Logger.Log(e);
             }
             finally
             {
@@ -391,12 +391,12 @@ namespace NLeaderElection.Messaging
             catch (System.Net.Sockets.SocketException socketExp)
             {
                 isFollowerRVResponseConnectDone = false;
-                Logger.Log(socketExp.Message);
+                Logger.Log(socketExp);
             }
             catch (Exception e)
             {
                 isFollowerRVResponseConnectDone = false;
-                Logger.Log(e.Message);
+                Logger.Log(e);
             }
             finally
             {
@@ -440,13 +440,13 @@ namespace NLeaderElection.Messaging
             }
             catch (SocketException scExp)
             {
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
                 isFollowerRVResponseSendDone = false;
                 followerRVResponseSendDone.Set();
             }
             catch (Exception e)
             {
-                Logger.Log(e.Message);
+                Logger.Log(e);
                 isFollowerRVResponseSendDone = false;
                 followerRVResponseSendDone.Set();
             }
@@ -464,12 +464,12 @@ namespace NLeaderElection.Messaging
             }
             catch (SocketException scExp)
             {
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
                 isFollowerRVResponseSendDone = false;
             }
             catch (Exception e)
             {
-                Logger.Log(e.Message);
+                Logger.Log(e);
                 isFollowerRVResponseSendDone = false;
             }
             finally
@@ -524,11 +524,11 @@ namespace NLeaderElection.Messaging
             }
             catch (SocketException scExp)
             {
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
             }
             catch (Exception e)
             {
-                Logger.Log(e.Message);
+                Logger.Log(e);
             }
             finally
             {
@@ -568,13 +568,13 @@ namespace NLeaderElection.Messaging
             }
             catch (SocketException scExp)
             {
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
                 isStartupRequestResponseReceiveDone = false;
                 startupRequestResponseReceiveDone.Set();
             }
             catch (Exception e)
             {
-                Logger.Log(e.Message);
+                Logger.Log(e);
                 isStartupRequestResponseReceiveDone = false;
                 startupRequestResponseReceiveDone.Set();
             }
@@ -623,12 +623,12 @@ namespace NLeaderElection.Messaging
             }
             catch (SocketException scExp)
             {
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
                 isStartupRequestResponseReceiveDone = false;
             }
             catch (Exception e)
             {
-                Logger.Log(e.Message);
+                Logger.Log(e);
                 isStartupRequestResponseReceiveDone = false;
             }
             finally
@@ -650,13 +650,13 @@ namespace NLeaderElection.Messaging
             }
             catch (SocketException scExp)
             {
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
                 isCandidateSendDone = false;
                 candidateSendDone.Set();
             }
             catch (Exception e)
             {
-                Logger.Log(e.Message);
+                Logger.Log(e);
                 isCandidateSendDone = false;
                 candidateSendDone.Set();
             }
@@ -676,12 +676,12 @@ namespace NLeaderElection.Messaging
             }
             catch (SocketException scExp)
             {
-                Logger.Log(scExp.Message);
+                Logger.Log(scExp);
                 isCandidateSendDone = false;
             }
             catch (Exception e)
             {
-                Logger.Log(e.Message);
+                Logger.Log(e);
                 isCandidateSendDone = false;
             }
             finally

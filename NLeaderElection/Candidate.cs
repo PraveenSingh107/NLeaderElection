@@ -102,9 +102,9 @@ namespace NLeaderElection
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
-                throw;
+                Logger.Log(exp);
             }
         }
 
