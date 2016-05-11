@@ -48,6 +48,10 @@
     <Compile Include="Candidate.cs" />
     <Compile Include="DummyNode.cs" />
     <Compile Include="Follower.cs" />
+    <Compile Include="ILogProcessor.cs" />
+    <Compile Include="LogQueueProcessor.cs" />
+    <Compile Include="Messages\LogEntry.cs" />
+    <Compile Include="Messaging\AppendEntriesProcessor.cs" />
     <Compile Include="Messaging\RequestListener.cs" />
     <Compile Include="Messaging\StateObject.cs" />
     <Compile Include="Exceptions\MoreThanOneIPAddressConfigured.cs" />

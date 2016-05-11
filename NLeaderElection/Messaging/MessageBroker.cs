@@ -733,6 +733,11 @@ namespace NLeaderElection.Messaging
 
         #endregion Disposable
 
-        
+
+        // TO DO 
+        internal void LeaderSendAppendEntryRPCAsync(LogEntry logEntry, DummyFollowerNode node)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

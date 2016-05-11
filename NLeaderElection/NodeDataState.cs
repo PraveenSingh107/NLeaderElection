@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NLeaderElection.Messages;
 
 namespace NLeaderElection
 {
@@ -11,6 +12,7 @@ namespace NLeaderElection
         public long Term { get; set; }
         public bool Voted { get; set; }
         public string LeaderId { get; set; }
+        public LogEntry LastLogEntry { get; set; }
 
         public NodeDataState()
         {

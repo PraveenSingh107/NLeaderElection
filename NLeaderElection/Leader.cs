@@ -1,4 +1,5 @@
-﻿using NLeaderElection.Messaging;
+﻿using NLeaderElection.Messages;
+using NLeaderElection.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,11 +12,16 @@ namespace NLeaderElection
 {
     public class Leader : Node, IDisposable
     {
+
+        #region Properties
         public NodeDataState CurrentStateData { get; set; }
         public List<Follower> Followers { get; private set; }
         private object lockerObject = new Object();
         private Timer heartBeatTimeout;
+        #endregion Properties
 
+        # region Constructors
+        
         public Leader()
             : this(DateTime.Now.ToString("yyyyMMddHHmmssffff"))
         { }
@@ -40,7 +46,10 @@ namespace NLeaderElection
             CurrentStateData = new NodeDataState();
             CurrentStateData.SetTerm(term);
         }
+        
+        # endregion Constructors
 
+        # region Methods
 
         private void HeartBeatTimeoutElapsed(object sender, ElapsedEventArgs e)
         {
@@ -137,5 +146,8 @@ namespace NLeaderElection
         {
             return --this.CurrentStateData.Term;
         }
+
+        #endregion Methods
+    
     }
 }

@@ -13,6 +13,7 @@ namespace NLeaderElection
         private List<DummyFollowerNode> nodes = new List<DummyFollowerNode>();
         private List<DummyFollowerNode> activeNodes = new List<DummyFollowerNode>();
         public Node CurrentNode { get;private set; }
+        public Leader CurrentLeader { get; set; }
 
         public void RegisterCurrentNode(Node node)
         {
@@ -135,6 +136,21 @@ namespace NLeaderElection
             {
                 Logger.Log("WARNING ! WRONG CALL TO DEMOTE LEADER TO FOLLOWER. LEADER ALREADY DEMOTED.");
             }
+        }
+
+        internal int GetConsensusCount()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void UpdateCommitLogToCommittedState(Messages.AppendEntriesRPCResponse response)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void NotifyClientOnCommandCommitted(Messages.LogEntry logEntry)
+        {
+            throw new NotImplementedException();
         }
     }
 }
