@@ -125,7 +125,7 @@ namespace NLeaderElection
             if (leader != null)
             {
                 Follower follower = new Follower(leader.GetNodeId(), leader.GetIP());
-                follower.UpdateTerm(leader.CurrentStateData.Term);
+                follower.UpdateTerm(leader.GetPreviousTerm());
                 this.CurrentNode = follower;
                 //leader.Dispose();
                 follower.StartHeartbeatTimouts();

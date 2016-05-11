@@ -56,7 +56,7 @@ namespace NLeaderElection
 
         public void SendHeartBeatMessage()
         {
-            Logger.Log("INFO (L) :: Initiating sending heartbeat signals.");
+            Logger.Log(string.Format("INFO (L) :: Initiating sending heartbeat signals for term {0}.",GetTerm()));
             var dummyFollowers = NodeRegistryCache.GetInstance().Get();
                 foreach (var follower in dummyFollowers)
                 {
@@ -131,6 +131,11 @@ namespace NLeaderElection
                 heartBeatTimeout.Stop();
                 heartBeatTimeout.Close();
             }
+        }
+
+        internal long GetPreviousTerm()
+        {
+            return --this.CurrentStateData.Term;
         }
     }
 }
