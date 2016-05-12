@@ -13,6 +13,7 @@ namespace NLeaderElection.Messages
     {
 
         # region Properties
+        public AppendEntriesRPCRequestType RequestType { get; set; }
         public LogEntry LastLogEntry { get; private set; }
         public LogEntry CurrentLogEntry { get; private set; }
         # endregion
@@ -28,8 +29,8 @@ namespace NLeaderElection.Messages
         # region Methods
         public override string ToString()
         {
-            return string.Format("AppendEntryMessage###LastLogEntry: {} ## CurrentLogEntry: {}", this.LastLogEntry.ToString(),
-                this.CurrentLogEntry.ToString());
+            return string.Format("AppendEntryRequest###RequestType : {0} ## LastLogEntry: {1} ## CurrentLogEntry: {2}", RequestType.ToString(),
+                this.LastLogEntry.ToString(), this.CurrentLogEntry.ToString());
         }
         # endregion Methods
 

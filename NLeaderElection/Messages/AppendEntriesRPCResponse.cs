@@ -6,9 +6,18 @@ using System.Threading.Tasks;
 
 namespace NLeaderElection.Messages
 {
+
+    public enum AppendEntriesRPCRequestType
+    {
+        HeartBeatSignal,
+        AppendEntryUncommitMessage,
+        AppendEntryCommitMessage
+    }
+
     public enum AppendEntriesRPCResponseType
     {
-        WrittenToPersistentStorage,
+        AppendEntryUncommittedMessage,
+        AppendEntryCommittedMessage,
         LastLogEntryOutOfSync
     }
 
@@ -32,10 +41,11 @@ namespace NLeaderElection.Messages
         # region Method
         public override string ToString()
         {
-            return string.Format("AppendEntryMessage###Response: {0} ## CurrentLogEntry: {1} ## FollowerNodeId: {2}",
-                ResponseStatus.ToString(), CurrentLogEntry.ToString(),FollowerNodeId);
+            return string.Format("AppendEntryResponse###Response : {0} ## CurrentLogEntry: {1} ## FollowerNodeId: {2}",ResponseStatus.ToString(), 
+                CurrentLogEntry.ToString(),FollowerNodeId);
         }
         #endregion
     
     }
+
 }

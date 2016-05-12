@@ -52,13 +52,32 @@ namespace NLeaderElection.Messaging
 
         #region Leader Send Methods
 
-        internal void LeaderSendHeartbeatAsync(Node node, long term)
+        internal void LeaderSendAppendEntryAsync(Node node, string messageToSend, AppendEntriesRPCRequestType requestType)
         {
             Socket senderSocket = null;
             // open a tcp connection to the node's socket.
             try
             {
-                Logger.Log(string.Format("INFO :: Sending heartbeat signal to {0} .", node.ToString()));
+                string sendingDisplayMsg = string.Empty;
+                string sentDisplayMsg = string.Empty;
+
+                switch (requestType)
+                {
+                    case AppendEntriesRPCRequestType.AppendEntryUncommitMessage :
+                        sendingDisplayMsg = string.Format("INFO :: Sending uncommitted append entry message to {0} .", node.ToString());
+                        sentDisplayMsg = string.Format("INFO :: Sent uncommitted append entry message to {0} .", node.ToString());
+                        break;
+                    case AppendEntriesRPCRequestType.AppendEntryCommitMessage :
+                        sendingDisplayMsg = string.Format("INFO :: Sending committed append entrt messge to {0} .", node.ToString());
+                        sentDisplayMsg = string.Format("INFO :: Sent committed append entrt messge to {0} .", node.ToString());
+                        break;
+                    default: 
+                        sendingDisplayMsg = string.Format("INFO :: Sending heartbeat signal to {0} .", node.ToString());
+                        sentDisplayMsg = string.Format("INFO :: Sent heartbeat signal to {0} .", node.ToString());
+                        break;
+                }
+
+                Logger.Log(sendingDisplayMsg);
                 IPAddress ipAddress = node.IP;
                 IPEndPoint remoteEP = new IPEndPoint(ipAddress, HEARTBEAT_PORT_NUMBER);
 
@@ -72,12 +91,12 @@ namespace NLeaderElection.Messaging
                 if (isLeaderConnectDone)
                 {
                     // Send test data to the remote device.
-                    SendHeartbeatSignal(senderSocket, term + "##<EOF>");
+                    SendHeartbeatSignal(senderSocket, messageToSend);
                     leaderSendDone.WaitOne();
                     if (isLeaderSendDone)
                     {
                         // Write the response to the console.
-                        Logger.Log(string.Format("INFO :: Sent heartbeat signal to {0} .", node.ToString()));
+                        Logger.Log(sentDisplayMsg);
                     }
                 }
             }

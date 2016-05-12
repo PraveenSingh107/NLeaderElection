@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace NLeaderElection.Messaging
 {
-    public class AppendEntriesProcessor
+    public class AppendEntriesProcessor : IDisposable
     {
         # region Properties
         private static AppendEntriesProcessor _instance = new AppendEntriesProcessor();
@@ -16,11 +16,11 @@ namespace NLeaderElection.Messaging
         private volatile static Dictionary<LogEntry, List<DummyFollowerNode>> _unrespondedLogNodes = new Dictionary<LogEntry, List<DummyFollowerNode>>();
         private volatile static Dictionary<LogEntry, List<DummyFollowerNode>> _respondedLogNodes = new Dictionary<LogEntry, List<DummyFollowerNode>>();
         private volatile static List<LogEntry> _committedLogs = new List<LogEntry>();
-
         private ManualResetEvent _unprocessedLogAdditionNotifier = new ManualResetEvent(false);
-        # endregion 
+        # endregion
 
-        private AppendEntriesProcessor() {
+        private AppendEntriesProcessor()
+        {
             Task.Run(() => { AddUnrespondedLog(); });
         }
 
@@ -31,7 +31,7 @@ namespace NLeaderElection.Messaging
 
         public void AddUnprocessedLog(LogEntry logEntry)
         {
-            _unprocessedLogs.Enqueue(logEntry);  
+            _unprocessedLogs.Enqueue(logEntry);
             _unprocessedLogAdditionNotifier.Set();
         }
 
@@ -43,8 +43,8 @@ namespace NLeaderElection.Messaging
             // TO DO : Might need to send RPC on different threads. Otherwise client response will be delayed
             while (_unprocessedLogs.Count > 0)
             {
-                var logEntry = _unprocessedLogs.Dequeue();
-                foreach(var node in dummyNodes)
+                LogEntry logEntry = _unprocessedLogs.Dequeue();
+                foreach (var node in dummyNodes)
                 {
                     if (_unrespondedLogNodes.ContainsKey(logEntry))
                         _unrespondedLogNodes[logEntry].Add(node);
@@ -54,9 +54,14 @@ namespace NLeaderElection.Messaging
                         nodes.Add(node);
                         _unrespondedLogNodes.Add(logEntry, nodes);
                     }
-                    MessageBroker.GetInstance().LeaderSendAppendEntryRPCAsync(logEntry, node);
+                    LogEntry previousLog = LogEntryKeeper.GetInstance().GetPreviousLogEntry(logEntry);
+                    AppendEntriesRPCMessage requestMsg = new AppendEntriesRPCMessage(previousLog, logEntry);
+                    requestMsg.RequestType = AppendEntriesRPCRequestType.AppendEntryUncommitMessage;
+                    MessageBroker.GetInstance().LeaderSendAppendEntryAsync(node as Node, logEntry.ToString(),
+                        AppendEntriesRPCRequestType.AppendEntryUncommitMessage);
                 }
             }
+            AddUnrespondedLog();
         }
 
         internal void AddRespondedLogNodes(AppendEntriesRPCResponse response, DummyFollowerNode node)
@@ -83,8 +88,9 @@ namespace NLeaderElection.Messaging
             {
                 NodeRegistryCache.GetInstance().UpdateCommitLogToCommittedState(response);
                 _committedLogs.Add(response.CurrentLogEntry);
+                LogEntryKeeper.GetInstance().AddCommittedLogEntry(response.CurrentLogEntry);
                 NodeRegistryCache.GetInstance().NotifyClientOnCommandCommitted(response.CurrentLogEntry);
-                SendoutCommitAppendEntry(response.CurrentLogEntry,node);
+                SendoutCommitAppendEntry(response.CurrentLogEntry, node);
             }
             else if (_committedLogs.Contains(response.CurrentLogEntry))
             {
@@ -100,7 +106,7 @@ namespace NLeaderElection.Messaging
             }
         }
 
-        private void SendoutCommitAppendEntry(LogEntry logEntry,DummyFollowerNode node)
+        private void SendoutCommitAppendEntry(LogEntry logEntry, DummyFollowerNode node)
         {
             foreach (var nodes in _respondedLogNodes[logEntry])
             {
@@ -113,7 +119,7 @@ namespace NLeaderElection.Messaging
         /// </summary>
         /// <param name="log"></param>
         /// <param name="node"></param>
- 
+
         internal void RemoveAppendEntryRespondedNode(LogEntry log, DummyFollowerNode node)
         {
             if (_respondedLogNodes.ContainsKey(log))
@@ -126,5 +132,29 @@ namespace NLeaderElection.Messaging
                 }
             }
         }
+
+        # region Disposable
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_unprocessedLogAdditionNotifier != null) _unprocessedLogAdditionNotifier.Dispose();
+            }
+        }
+
+        ~AppendEntriesProcessor()
+        {
+            Dispose(false);
+        }
+
+        #endregion Disposable
+
     }
 }

@@ -71,7 +71,11 @@ namespace NLeaderElection
                 {
                     try
                     {
-                        Task.Run(() => { MessageBroker.GetInstance().LeaderSendHeartbeatAsync(follower, this.CurrentStateData.Term); });
+                        string msgToSend = this.CurrentStateData.Term.ToString() + "##<EOF>";
+                        Task.Run(() =>
+                        {
+                            MessageBroker.GetInstance().LeaderSendAppendEntryAsync(follower, msgToSend
+                            ,AppendEntriesRPCRequestType.HeartBeatSignal); });
                     }
                     catch (Exception exp)
                     {
