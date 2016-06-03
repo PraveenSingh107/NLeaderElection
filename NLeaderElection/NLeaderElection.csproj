@@ -47,8 +47,11 @@
   <ItemGroup>
     <Compile Include="Candidate.cs" />
     <Compile Include="DummyNode.cs" />
+    <Compile Include="FilePersistenceManager.cs" />
     <Compile Include="Follower.cs" />
     <Compile Include="ILogProcessor.cs" />
+    <Compile Include="IPersistenceManager.cs" />
+    <Compile Include="LogEntryKeeper.cs" />
     <Compile Include="LogQueueProcessor.cs" />
     <Compile Include="Messages\LogEntry.cs" />
     <Compile Include="Messaging\AppendEntriesProcessor.cs" />
@@ -65,6 +68,7 @@
     <Compile Include="Messaging\MessageBroker.cs" />
     <Compile Include="NodeDataState.cs" />
     <Compile Include="NodeRegistryCache.cs" />
+    <Compile Include="NodeState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

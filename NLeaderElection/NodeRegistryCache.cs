@@ -143,13 +143,9 @@ namespace NLeaderElection
             throw new NotImplementedException();
         }
 
-        internal void UpdateCommitLogToCommittedState(Messages.AppendEntriesRPCResponse response)
-        {
-            throw new NotImplementedException();
-        }
-
         internal void NotifyClientOnCommandCommitted(Messages.LogEntry logEntry)
         {
+            // send notifications to the client.  Or publicly make it available via api Or show on web.
             throw new NotImplementedException();
         }
     }

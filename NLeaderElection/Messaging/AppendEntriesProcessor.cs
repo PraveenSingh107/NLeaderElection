@@ -11,17 +11,38 @@ namespace NLeaderElection.Messaging
     public class AppendEntriesProcessor : IDisposable
     {
         # region Properties
+        private long logIndex = 0;
         private static AppendEntriesProcessor _instance = new AppendEntriesProcessor();
         private volatile static Queue<LogEntry> _unprocessedLogs = new Queue<LogEntry>();
         private volatile static Dictionary<LogEntry, List<DummyFollowerNode>> _unrespondedLogNodes = new Dictionary<LogEntry, List<DummyFollowerNode>>();
         private volatile static Dictionary<LogEntry, List<DummyFollowerNode>> _respondedLogNodes = new Dictionary<LogEntry, List<DummyFollowerNode>>();
-        private volatile static List<LogEntry> _committedLogs = new List<LogEntry>();
+        private volatile static List<LogEntry> _committedLogs;
         private ManualResetEvent _unprocessedLogAdditionNotifier = new ManualResetEvent(false);
+        private IPersistenceManager _persistenceManager;
         # endregion
 
         private AppendEntriesProcessor()
         {
-            Task.Run(() => { AddUnrespondedLog(); });
+            try
+            {
+                _committedLogs = new List<LogEntry>();
+                _persistenceManager = new FilePersistenceManager();
+                Task.Run(() => { AddUnrespondedLog(); });
+                _committedLogs.AddRange(_persistenceManager.GetAllCommittedLogEntries());
+                if (_committedLogs.Count > 0)
+                    logIndex = _committedLogs.Last().Index;
+                else
+                    logIndex = 0;
+            }
+            catch (Exception exp)
+            {
+                throw;
+            }
+        }
+
+        public long LogIndex()
+        {
+            return ++logIndex;
         }
 
         public static AppendEntriesProcessor GetInstance()
@@ -31,6 +52,7 @@ namespace NLeaderElection.Messaging
 
         public void AddUnprocessedLog(LogEntry logEntry)
         {
+            _persistenceManager.SaveUncommittedLogEntry(logEntry);
             _unprocessedLogs.Enqueue(logEntry);
             _unprocessedLogAdditionNotifier.Set();
         }
@@ -54,14 +76,26 @@ namespace NLeaderElection.Messaging
                         nodes.Add(node);
                         _unrespondedLogNodes.Add(logEntry, nodes);
                     }
-                    LogEntry previousLog = LogEntryKeeper.GetInstance().GetPreviousLogEntry(logEntry);
+                    LogEntry previousLog = GetPreviousLogEntry(logEntry);
                     AppendEntriesRPCMessage requestMsg = new AppendEntriesRPCMessage(previousLog, logEntry);
                     requestMsg.RequestType = AppendEntriesRPCRequestType.AppendEntryUncommitMessage;
                     MessageBroker.GetInstance().LeaderSendAppendEntryAsync(node as Node, logEntry.ToString(),
                         AppendEntriesRPCRequestType.AppendEntryUncommitMessage);
                 }
             }
+            _unprocessedLogAdditionNotifier.Reset();
             AddUnrespondedLog();
+        }
+
+        public LogEntry GetPreviousLogEntry(LogEntry logEntry)
+        {
+            if (_committedLogs.Contains(logEntry))
+            {
+                var index = _committedLogs.IndexOf(logEntry);
+                if (index >= 1)
+                    return _committedLogs[index - 1];
+            }
+            return null;
         }
 
         internal void AddRespondedLogNodes(AppendEntriesRPCResponse response, DummyFollowerNode node)
@@ -86,9 +120,9 @@ namespace NLeaderElection.Messaging
             if (!_committedLogs.Contains(response.CurrentLogEntry) &&
                 _respondedLogNodes[response.CurrentLogEntry].Count >= NodeRegistryCache.GetInstance().GetConsensusCount())
             {
-                NodeRegistryCache.GetInstance().UpdateCommitLogToCommittedState(response);
+                // persist the committed log entry as committed log.
+                _persistenceManager.SaveCommittedLogEntry(response.CurrentLogEntry);
                 _committedLogs.Add(response.CurrentLogEntry);
-                LogEntryKeeper.GetInstance().AddCommittedLogEntry(response.CurrentLogEntry);
                 NodeRegistryCache.GetInstance().NotifyClientOnCommandCommitted(response.CurrentLogEntry);
                 SendoutCommitAppendEntry(response.CurrentLogEntry, node);
             }

@@ -152,6 +152,22 @@ namespace NLeaderElection
         }
 
         #endregion Methods
-    
+
+
+        public void ExecuteCommand(string commandText)
+        {
+            try
+            {
+                LogEntry log = new LogEntry(CurrentStateData.Term, AppendEntriesProcessor.GetInstance().LogIndex());
+                log.Command = commandText;
+                log.IsCommitted = false;
+                AppendEntriesProcessor.GetInstance().AddUnprocessedLog(log);
+                Logger.Log(string.Format("INFO (L) :: Processing the log entry {0}", log));
+            }
+            catch (Exception exp)
+            {
+                Logger.Log(exp.Message);
+            }
+        }
     }
 }

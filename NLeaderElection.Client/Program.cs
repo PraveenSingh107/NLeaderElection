@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NLeaderElection.Exceptions;
+using NLeaderElection.Client.Simulator;
 
 namespace NLeaderElection.Client
 {
@@ -17,6 +18,8 @@ namespace NLeaderElection.Client
             try
             {
                 Setup(args);
+                RandomClientCommandGenerator simulator = new RandomClientCommandGenerator();
+                simulator.Simulate();
                 Console.Read();
             }
             catch (MoreThanOneIPAddressConfigured exp)

@@ -11,6 +11,7 @@ namespace NLeaderElection.Messages
         public long Term { get; private set; }
         public long Index { get; private set; }
         public String Command { get; set; }
+        public bool IsCommitted { get; set; }
         
         public LogEntry(long term, long index)
         {
@@ -18,9 +19,12 @@ namespace NLeaderElection.Messages
             Index = index;
         }
 
+        private LogEntry() { }
+
         public override string ToString()
         {
-            return string.Format("Term: {0} ## Index:{1}", Term, Index);
+            return string.Format("Term:{0}##Index:{1}##Command:{2}##Committed:{3}", 
+                Term, Index, Command, IsCommitted);
         }
 
         public override bool Equals(object obj)
@@ -29,7 +33,8 @@ namespace NLeaderElection.Messages
             if(other == null)
                 return false;
 
-             return Index.Equals(other.Index) && Term.Equals(other.Term);
+             return Index.Equals(other.Index) && Term.Equals(other.Term) &&
+                 IsCommitted.Equals(other.IsCommitted);
         }
 
         public override int GetHashCode()
@@ -47,6 +52,34 @@ namespace NLeaderElection.Messages
                 return -1;
             else
                 return 0;
+        }
+
+        internal static LogEntry GetLogEntryFromString(string lastLogEntry)
+        {
+            if (string.IsNullOrEmpty(lastLogEntry))
+                return null;
+            else
+            {
+                var splittedValues = lastLogEntry.Split(new String[] { "##" }, StringSplitOptions.RemoveEmptyEntries);
+                if (splittedValues.Count() < 4)
+                    return null;
+                else
+                {
+                    LogEntry logEntry = new LogEntry();
+                    foreach (var splittedValue in splittedValues)
+                    {
+                        var keyValuePair = splittedValue.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+                        switch (keyValuePair[0])
+                        {
+                            case "Term": logEntry.Term = long.Parse(keyValuePair[1]); break;
+                            case "Index": logEntry.Index = long.Parse(keyValuePair[1]); break;
+                            case "Command": logEntry.Command = keyValuePair[1]; break;
+                            case "Committed": logEntry.IsCommitted = bool.Parse(keyValuePair[1]); break;
+                        }
+                    }
+                    return logEntry;
+                }
+            }
         }
     }
 }
