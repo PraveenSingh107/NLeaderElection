@@ -111,5 +111,10 @@ namespace NLeaderElection.Client
             Console.WriteLine("-Bind :To bind an IP address to a node.Required while node has multiple IP's assigned.");
         }
 
-    }
+		private static String GetProductInfo()
+		{
+			string produtionInfo = "This is raft protocol binding for .net";
+			return produtionInfo;
+		}
+	}
 }
