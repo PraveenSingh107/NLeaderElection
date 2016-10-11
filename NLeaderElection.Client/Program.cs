@@ -116,5 +116,11 @@ namespace NLeaderElection.Client
 			string produtionInfo = "This is raft protocol binding for .net";
 			return produtionInfo;
 		}
+
+		private static String GetAlternateProductInfo()
+		{
+			string produtionInfo = "This is raft protocol binding for .net";
+			return produtionInfo;
+		}
 	}
 }
